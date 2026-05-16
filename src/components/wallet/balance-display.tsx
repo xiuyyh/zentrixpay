@@ -50,10 +50,10 @@ export function BalanceDisplay({ amount, label, className, accent }: BalanceDisp
     : amount.toFixed(2)
 
   return (
-    <div className={cn("space-y-1", className)}>
-      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{label}</p>
+    <div className={cn("space-y-1 min-w-0 overflow-hidden", className)}>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold truncate">{label}</p>
       <p className={cn(
-        "text-3xl font-headline font-bold tracking-tight",
+        "text-xl sm:text-2xl lg:text-3xl font-headline font-bold tracking-tight break-all sm:break-normal",
         accent ? "text-primary" : "text-foreground"
       )}>
         <span className="text-muted-foreground/40 font-normal mr-0.5">₦</span>

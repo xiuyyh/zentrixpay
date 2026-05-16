@@ -39,7 +39,7 @@ export default function WalletPage() {
                  <Smartphone className="size-8 text-accent opacity-20" />
               </div>
            </CardHeader>
-           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8">
+           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 p-8">
               <BalanceDisplay amount={124500.00} label="Available to Withdraw" accent />
               <BalanceDisplay amount={35000.00} label="Pending Reviews" />
               <BalanceDisplay amount={842100.00} label="Total Earned" />

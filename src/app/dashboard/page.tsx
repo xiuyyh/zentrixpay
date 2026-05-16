@@ -40,7 +40,7 @@ export default function DashboardPage() {
             </CardTitle>
             <CardDescription>Consolidated view of your Zentrix Pay earnings.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 pt-4">
             <BalanceDisplay amount={124500.00} label="Available" accent />
             <BalanceDisplay amount={35000.00} label="Processing" />
             <BalanceDisplay amount={842100.00} label="Lifetime Total" />

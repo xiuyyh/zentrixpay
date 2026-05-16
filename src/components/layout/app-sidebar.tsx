@@ -12,9 +12,21 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { NavMain } from "./nav-main"
-import { Zap } from "lucide-react"
+import { Zap, LogOut, User as UserIcon } from "lucide-react"
+import { useUser, useAuth } from "@/firebase"
+import { signOut } from "firebase/auth"
+import { useRouter } from "next/navigation"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useUser()
+  const auth = useAuth()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await signOut(auth)
+    router.push('/auth')
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -36,8 +48,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain />
       </SidebarContent>
       <SidebarFooter>
-        <div className="p-4 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Verified Fintech Partner</p>
+        <SidebarMenu>
+          {user && (
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" className="hover:bg-sidebar-accent group">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-secondary text-secondary-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <UserIcon className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-bold text-xs">{user.displayName || user.email?.split('@')[0]}</span>
+                  <span className="truncate text-[10px] opacity-60">{user.email}</span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+              <LogOut className="size-4" />
+              <span className="font-bold">Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <div className="p-4 text-center border-t border-sidebar-border mt-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Verified Partner</p>
         </div>
       </SidebarFooter>
       <SidebarRail />

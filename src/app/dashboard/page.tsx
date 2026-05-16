@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { BalanceDisplay } from "@/components/wallet/balance-display"
 import { Button } from "@/components/ui/button"
@@ -9,7 +10,7 @@ export default function DashboardPage() {
   const stats = [
     { label: "Tasks Completed", value: "12", icon: CheckCircle2, color: "text-red-500" },
     { label: "Pending Reviews", value: "3", icon: Clock, color: "text-muted-foreground" },
-    { label: "Earnings Potential", value: "$450.00", icon: Zap, color: "text-accent" },
+    { label: "Earnings Potential", value: "₦450,000.00", icon: Zap, color: "text-accent" },
   ]
 
   return (
@@ -17,7 +18,7 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h2 className="text-4xl font-headline font-bold text-foreground tracking-tight">Welcome back, John.</h2>
-          <p className="text-muted-foreground mt-2 font-medium">Earn up to <span className="text-primary font-bold">$15.00</span> today with available tasks.</p>
+          <p className="text-muted-foreground mt-2 font-medium">Earn up to <span className="text-primary font-bold">₦15,000.00</span> today with available tasks.</p>
         </div>
         <Link href="/tasks">
           <Button className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl px-8 h-12 shadow-lg shadow-primary/20 group">
@@ -40,9 +41,9 @@ export default function DashboardPage() {
             <CardDescription>Consolidated view of your Zentrix Pay earnings.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
-            <BalanceDisplay amount={124.50} label="Available" accent />
-            <BalanceDisplay amount={35.00} label="Processing" />
-            <BalanceDisplay amount={842.10} label="Lifetime Total" />
+            <BalanceDisplay amount={124500.00} label="Available" accent />
+            <BalanceDisplay amount={35000.00} label="Processing" />
+            <BalanceDisplay amount={842100.00} label="Lifetime Total" />
           </CardContent>
           <div className="bg-secondary/20 p-4 border-t border-border/50 flex justify-end gap-3">
             <Link href="/wallet">
@@ -79,9 +80,9 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-5">
                {[
-                 { cat: "Fintech", amount: "$320", percent: 75, color: "bg-primary" },
-                 { cat: "AI & Software", amount: "$150", percent: 45, color: "bg-accent" },
-                 { cat: "E-commerce", amount: "$90", percent: 30, color: "bg-muted-foreground" }
+                 { cat: "Fintech", amount: "₦320k", percent: 75, color: "bg-primary" },
+                 { cat: "AI & Software", amount: "₦150k", percent: 45, color: "bg-accent" },
+                 { cat: "E-commerce", amount: "₦90k", percent: 30, color: "bg-muted-foreground" }
                ].map(item => (
                  <div key={item.cat} className="space-y-2">
                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider">

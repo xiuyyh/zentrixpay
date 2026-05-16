@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -44,7 +45,6 @@ export function BalanceDisplay({ amount, label, className, accent }: BalanceDisp
     return () => clearInterval(timer)
   }, [amount])
 
-  // Fix hydration mismatch by rendering a static placeholder until mounted
   const formattedAmount = isMounted 
     ? displayAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : amount.toFixed(2)
@@ -56,7 +56,7 @@ export function BalanceDisplay({ amount, label, className, accent }: BalanceDisp
         "text-3xl font-headline font-bold tracking-tight",
         accent ? "text-primary" : "text-foreground"
       )}>
-        <span className="text-muted-foreground/40 font-normal mr-0.5">$</span>
+        <span className="text-muted-foreground/40 font-normal mr-0.5">₦</span>
         {formattedAmount}
       </p>
     </div>

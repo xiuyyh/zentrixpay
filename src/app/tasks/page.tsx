@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Star, ArrowRight, ExternalLink } from "lucide-react"
+import { Star, ArrowRight } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
@@ -11,7 +11,7 @@ const tasks = [
   {
     id: "1",
     company: "SwiftPay Solutions",
-    reward: "$5.00",
+    reward: "₦5,000",
     category: "Fintech",
     rating: 4.8,
     reviews: 1240,
@@ -21,7 +21,7 @@ const tasks = [
   {
     id: "2",
     company: "EcoSphere Systems",
-    reward: "$7.50",
+    reward: "₦7,500",
     category: "Software",
     rating: 4.2,
     reviews: 850,
@@ -31,7 +31,7 @@ const tasks = [
   {
     id: "3",
     company: "HealthCore AI",
-    reward: "$4.00",
+    reward: "₦4,000",
     category: "HealthTech",
     rating: 4.5,
     reviews: 2100,
@@ -41,7 +41,7 @@ const tasks = [
   {
     id: "4",
     company: "Logix Global",
-    reward: "$12.00",
+    reward: "₦12,000",
     category: "Logistics",
     rating: 3.9,
     reviews: 4500,
@@ -51,7 +51,7 @@ const tasks = [
   {
       id: "5",
       company: "CloudBound VPN",
-      reward: "$6.00",
+      reward: "₦6,000",
       category: "Security",
       rating: 4.7,
       reviews: 980,
@@ -61,7 +61,7 @@ const tasks = [
   {
       id: "6",
       company: "GrowthLabs",
-      reward: "$3.50",
+      reward: "₦3,500",
       category: "Marketing",
       rating: 4.1,
       reviews: 560,

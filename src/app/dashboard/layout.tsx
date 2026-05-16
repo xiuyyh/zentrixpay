@@ -1,3 +1,4 @@
+
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -20,7 +21,7 @@ export default function DashboardLayout({
           <div className="flex items-center gap-4">
             <div className="text-right">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Balance</p>
-                <p className="text-sm font-bold text-primary">$124.50</p>
+                <p className="text-sm font-bold text-primary">₦124,500.00</p>
             </div>
             <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
                 <span className="text-[10px] font-bold text-primary">JD</span>

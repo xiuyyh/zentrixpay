@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge"
 import { CreditCard, Download, History, PiggyBank, Smartphone, TrendingUp } from "lucide-react"
 
 const history = [
-  { id: "TX-9281", date: "2024-03-24", company: "SwiftPay Solutions", type: "Task", amount: "+$5.00", status: "Completed" },
-  { id: "TX-9275", date: "2024-03-22", company: "EcoSphere Systems", type: "Task", amount: "+$7.50", status: "Pending" },
-  { id: "TX-9240", date: "2024-03-20", company: "Payout: Bank Transfer", type: "Withdrawal", amount: "-$100.00", status: "Completed" },
-  { id: "TX-9233", date: "2024-03-18", company: "HealthCore AI", type: "Task", amount: "+$4.00", status: "Completed" },
-  { id: "TX-9210", date: "2024-03-15", company: "Logix Global", type: "Task", amount: "+$12.00", status: "Completed" },
+  { id: "TX-9281", date: "2024-03-24", company: "SwiftPay Solutions", type: "Task", amount: "+₦5,000.00", status: "Completed" },
+  { id: "TX-9275", date: "2024-03-22", company: "EcoSphere Systems", type: "Task", amount: "+₦7,500.00", status: "Pending" },
+  { id: "TX-9240", date: "2024-03-20", company: "Payout: Bank Transfer", type: "Withdrawal", amount: "-₦100,000.00", status: "Completed" },
+  { id: "TX-9233", date: "2024-03-18", company: "HealthCore AI", type: "Task", amount: "+₦4,000.00", status: "Completed" },
+  { id: "TX-9210", date: "2024-03-15", company: "Logix Global", type: "Task", amount: "+₦12,000.00", status: "Completed" },
 ]
 
 export default function WalletPage() {
@@ -40,9 +40,9 @@ export default function WalletPage() {
               </div>
            </CardHeader>
            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8">
-              <BalanceDisplay amount={124.50} label="Available to Withdraw" accent />
-              <BalanceDisplay amount={35.00} label="Pending Reviews" />
-              <BalanceDisplay amount={842.10} label="Total Earned" />
+              <BalanceDisplay amount={124500.00} label="Available to Withdraw" accent />
+              <BalanceDisplay amount={35000.00} label="Pending Reviews" />
+              <BalanceDisplay amount={842100.00} label="Total Earned" />
            </CardContent>
            <div className="p-8 pt-0 flex flex-wrap gap-4">
               <Button size="lg" className="bg-primary hover:bg-primary/90 px-8 font-bold">
@@ -67,7 +67,7 @@ export default function WalletPage() {
                  </div>
                  <div>
                     <p className="text-xs text-muted-foreground">This Month</p>
-                    <p className="text-lg font-bold">+$245.50</p>
+                    <p className="text-lg font-bold">+₦245,500.00</p>
                  </div>
               </div>
               <div className="flex items-center gap-4">
@@ -76,7 +76,7 @@ export default function WalletPage() {
                  </div>
                  <div>
                     <p className="text-xs text-muted-foreground">Referral Bonus</p>
-                    <p className="text-lg font-bold">+$42.00</p>
+                    <p className="text-lg font-bold">+₦42,000.00</p>
                  </div>
               </div>
               <div className="pt-4 border-t border-border">

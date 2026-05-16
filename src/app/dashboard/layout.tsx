@@ -1,4 +1,3 @@
-
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -16,15 +15,15 @@ export default function DashboardLayout({
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="flex-1">
-             <h1 className="text-sm font-headline font-semibold tracking-tight text-muted-foreground">Secure Dashboard</h1>
+             <h1 className="text-xs font-headline font-bold uppercase tracking-widest text-muted-foreground">Secure Console</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-                <p className="text-xs text-muted-foreground">Available Credit</p>
-                <p className="text-sm font-bold text-accent">$124.50</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Balance</p>
+                <p className="text-sm font-bold text-primary">$124.50</p>
             </div>
-            <div className="h-8 w-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
-                <span className="text-[10px] font-bold">JD</span>
+            <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-primary">JD</span>
             </div>
           </div>
         </header>

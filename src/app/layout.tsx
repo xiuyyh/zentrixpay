@@ -1,11 +1,10 @@
-
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'TrustEarn | Review & Get Paid',
-  description: 'Share your honest feedback and earn cash rewards with TrustEarn.',
+  title: 'Zentrix Pay | Earn for Your Feedback',
+  description: 'The premier platform for high-payout brand reviews and instant rewards.',
 };
 
 export default function RootLayout({

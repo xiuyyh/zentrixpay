@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -19,37 +18,46 @@ export function BalanceDisplay({ amount, label, className, accent }: BalanceDisp
     setIsMounted(true)
     let start = 0
     const end = amount
-    if (start === end) return
+    if (start === end) {
+        setDisplayAmount(end)
+        return
+    }
     
-    let totalDuration = 1000
-    let increment = end / (totalDuration / 16)
-    
-    let timer = setInterval(() => {
-      start += increment
-      if (start >= end) {
+    const duration = 1000
+    const frameDuration = 1000 / 60
+    const totalFrames = Math.round(duration / frameDuration)
+    let frame = 0
+
+    const timer = setInterval(() => {
+      frame++
+      const progress = frame / totalFrames
+      const current = end * progress
+
+      if (frame === totalFrames) {
         setDisplayAmount(end)
         clearInterval(timer)
       } else {
-        setDisplayAmount(start)
+        setDisplayAmount(current)
       }
-    }, 16)
+    }, frameDuration)
 
     return () => clearInterval(timer)
   }, [amount])
 
-  // Use a stable string for initial hydration to avoid locale mismatches
+  // Fix hydration mismatch by rendering a static placeholder until mounted
   const formattedAmount = isMounted 
     ? displayAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : "0.00"
+    : amount.toFixed(2)
 
   return (
     <div className={cn("space-y-1", className)}>
-      <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{label}</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{label}</p>
       <p className={cn(
         "text-3xl font-headline font-bold tracking-tight",
-        accent ? "text-accent" : "text-foreground"
+        accent ? "text-primary" : "text-foreground"
       )}>
-        ${formattedAmount}
+        <span className="text-muted-foreground/40 font-normal mr-0.5">$</span>
+        {formattedAmount}
       </p>
     </div>
   )

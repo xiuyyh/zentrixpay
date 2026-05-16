@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "tech-logistics",
+      "description": "Corporate logo for a technology and logistics company",
+      "imageUrl": "https://picsum.photos/seed/tech/200/200",
+      "imageHint": "tech logo"
+    },
+    {
+      "id": "eco-solutions",
+      "description": "Nature-themed corporate logo",
+      "imageUrl": "https://picsum.photos/seed/eco/200/200",
+      "imageHint": "eco logo"
+    },
+    {
+      "id": "fin-growth",
+      "description": "Financial services corporate logo",
+      "imageUrl": "https://picsum.photos/seed/finance/200/200",
+      "imageHint": "finance logo"
+    },
+    {
+      "id": "health-plus",
+      "description": "Healthcare brand logo",
+      "imageUrl": "https://picsum.photos/seed/health/200/200",
+      "imageHint": "health logo"
+    }
+  ]
 }

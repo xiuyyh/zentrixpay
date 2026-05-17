@@ -1,23 +1,38 @@
-
 'use client';
 
 import * as React from 'react';
-import { useAuth, useUser } from '@/firebase';
-import { signInWithPopup, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { useAuth, useUser, useFirestore } from '@/firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updateProfile,
+  setPersistence, 
+  browserLocalPersistence 
+} from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, Loader2, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Zap, Loader2, AlertCircle, Mail, Lock, User as UserIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AuthPage() {
   const auth = useAuth();
+  const db = useFirestore();
   const { user, loading: authStatusLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
-  const [isSigningIn, setIsSigningIn] = React.useState(false);
+  
+  const [isLoading, setIsLoading] = React.useState(false);
   const [authError, setAuthError] = React.useState<string | null>(null);
+  
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [displayName, setDisplayName] = React.useState('');
 
   // If user is already logged in, redirect to dashboard immediately
   React.useEffect(() => {
@@ -26,51 +41,56 @@ export default function AuthPage() {
     }
   }, [user, authStatusLoading, router]);
 
-  async function handleGoogleSignIn() {
-    if (isSigningIn) return;
-    
-    setIsSigningIn(true);
+  async function handleAuth(mode: 'login' | 'signup') {
+    if (isLoading) return;
+    setIsLoading(true);
     setAuthError(null);
-    
-    const provider = new GoogleAuthProvider();
-    
+
     try {
-      // Ensure persistence is set to local before signing in to maintain session
       await setPersistence(auth, browserLocalPersistence);
       
-      const result = await signInWithPopup(auth, provider);
-      if (result.user) {
-        router.push('/dashboard');
+      if (mode === 'signup') {
+        if (!displayName) throw new Error("Please enter your name.");
+        
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(result.user, { displayName });
+        
+        // Initialize user profile in Firestore
+        const userRef = doc(db, 'users', result.user.uid);
+        await setDoc(userRef, {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: displayName,
+          balance: 0,
+          pendingBalance: 0,
+          lifetimeEarnings: 0,
+          payoutMethod: 'Bank Transfer'
+        });
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
       }
+      
+      router.push('/dashboard');
     } catch (error: any) {
-      console.error("Auth Error Details:", error);
-      
+      console.error("Auth Error:", error);
       let message = error.message;
-      
-      // Handle specific Firebase Auth error codes with helpful context
-      if (error.code === 'auth/popup-closed-by-user') {
-        message = "The sign-in popup was closed or lost focus. This often happens if the browser blocks the window or if you switch tabs. Please click the button and stay on this window until finished.";
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        message = "A previous sign-in attempt was interrupted. Please wait a moment and try again.";
-      } else if (error.code === 'auth/popup-blocked') {
-        message = "The sign-in popup was blocked. Please check your browser's address bar for a 'popup blocked' icon and allow popups for this site.";
-      } else if (error.code === 'auth/unauthorized-domain') {
-        message = "This domain is not authorized for Google Sign-In. You may need to add your current domain to the 'Authorized Domains' list in the Firebase Console.";
-      }
+      if (error.code === 'auth/user-not-found') message = "No account found with this email.";
+      if (error.code === 'auth/wrong-password') message = "Incorrect password.";
+      if (error.code === 'auth/email-already-in-use') message = "An account already exists with this email.";
+      if (error.code === 'auth/invalid-email') message = "Invalid email format.";
+      if (error.code === 'auth/weak-password') message = "Password should be at least 6 characters.";
 
       setAuthError(message);
-      
       toast({
-        title: "Sign-in Issue",
+        title: mode === 'login' ? "Login Failed" : "Registration Failed",
         description: message,
         variant: "destructive",
       });
     } finally {
-      setIsSigningIn(false);
+      setIsLoading(false);
     }
   }
 
-  // Show a clean loading state if we're checking initial auth status
   if (authStatusLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -84,74 +104,129 @@ export default function AuthPage() {
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,0,0,0.05),transparent_50%)]" />
       
       <Card className="w-full max-w-md border-primary/20 bg-card/50 backdrop-blur-xl relative z-10 shadow-2xl">
-        <CardHeader className="text-center space-y-2">
-          <div className="flex justify-center mb-4">
-            <div className="flex aspect-square size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-2xl shadow-primary/40">
-              <Zap className="size-8" fill="currentColor" />
+        <CardHeader className="text-center space-y-2 pb-2">
+          <div className="flex justify-center mb-2">
+            <div className="flex aspect-square size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-2xl shadow-primary/40">
+              <Zap className="size-7" fill="currentColor" />
             </div>
           </div>
-          <CardTitle className="text-4xl font-headline font-bold tracking-tighter">
+          <CardTitle className="text-3xl font-headline font-bold tracking-tighter">
             ZENTRIX<span className="text-primary">PAY</span>
           </CardTitle>
-          <CardDescription className="text-base text-muted-foreground/80">
-            Access your rewards and feedback dashboard.
+          <CardDescription className="text-sm text-muted-foreground/80">
+            Secure access to your rewards console.
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-6 pb-8 space-y-6">
+        <CardContent className="pt-4">
           {authError && (
-            <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive animate-in fade-in slide-in-from-top-1">
+            <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive mb-6 animate-in fade-in slide-in-from-top-1">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Authentication Help</AlertTitle>
+              <AlertTitle>Error</AlertTitle>
               <AlertDescription className="text-xs">
                 {authError}
               </AlertDescription>
             </Alert>
           )}
 
-          <div className="space-y-4">
-            <Button 
-              className="w-full h-14 font-bold text-lg bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all active:scale-95" 
-              onClick={handleGoogleSignIn} 
-              disabled={isSigningIn}
-            >
-              {isSigningIn ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                <>
-                  <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
-                    <path
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      fill="currentColor"
-                    />
-                    <path
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      fill="currentColor"
-                      opacity="0.8"
-                    />
-                    <path
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      fill="currentColor"
-                      opacity="0.6"
-                    />
-                    <path
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      fill="currentColor"
-                      opacity="0.9"
-                    />
-                  </svg>
-                  Continue with Google
-                </>
-              )}
-            </Button>
-            
-            <p className="text-center text-xs text-muted-foreground font-medium px-4">
-              Join thousands of users earning for their reviews.
-            </p>
-          </div>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-secondary/50">
+              <TabsTrigger value="login" className="font-bold">Login</TabsTrigger>
+              <TabsTrigger value="signup" className="font-bold">Join Now</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-login">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                  <Input 
+                    id="email-login" 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    className="pl-10 h-11 bg-background border-border"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password-login">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                  <Input 
+                    id="password-login" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    className="pl-10 h-11 bg-background border-border"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button 
+                className="w-full h-12 font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all active:scale-95" 
+                onClick={() => handleAuth('login')}
+                disabled={isLoading}
+              >
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign In"}
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="signup" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name-signup">Full Name</Label>
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                  <Input 
+                    id="name-signup" 
+                    placeholder="John Doe" 
+                    className="pl-10 h-11 bg-background border-border"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email-signup">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                  <Input 
+                    id="email-signup" 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    className="pl-10 h-11 bg-background border-border"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password-signup">Create Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                  <Input 
+                    id="password-signup" 
+                    type="password" 
+                    placeholder="Min. 6 characters" 
+                    className="pl-10 h-11 bg-background border-border"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button 
+                className="w-full h-12 font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all active:scale-95" 
+                onClick={() => handleAuth('signup')}
+                disabled={isLoading}
+              >
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Account"}
+              </Button>
+            </TabsContent>
+          </Tabs>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 border-t border-border/50 pt-6">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            By signing in, you agree to our <span className="text-primary hover:underline cursor-pointer">Terms</span> and <span className="text-primary hover:underline cursor-pointer">Privacy</span>.
+            By continuing, you agree to the <span className="text-primary hover:underline cursor-pointer">Zentrix Terms of Service</span> and <span className="text-primary hover:underline cursor-pointer">Privacy Policy</span>.
           </p>
         </CardFooter>
       </Card>

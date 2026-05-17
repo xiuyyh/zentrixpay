@@ -19,6 +19,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const firestore = useFirestore();
 
+  // Redirect if not authenticated
   React.useEffect(() => {
     if (!authLoading && !user) {
       router.push('/auth');

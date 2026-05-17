@@ -67,7 +67,7 @@ export function NavMain() {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.url}
+                isActive={pathname.startsWith(item.url)}
                 tooltip={item.title}
               >
                 <Link href={item.url}>
@@ -86,7 +86,7 @@ export function NavMain() {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.url}
+                isActive={pathname.startsWith(item.url)}
                 tooltip={item.title}
               >
                 <Link href={item.url}>

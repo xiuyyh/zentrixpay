@@ -2,8 +2,8 @@
 'use client';
 
 import * as React from 'react';
-import { useAuth } from '@/firebase';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { useAuth, useUser } from '@/firebase';
+import { signInWithPopup, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,51 +13,70 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AuthPage() {
   const auth = useAuth();
+  const { user, loading: authStatusLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSigningIn, setIsSigningIn] = React.useState(false);
   const [authError, setAuthError] = React.useState<string | null>(null);
 
+  // If user is already logged in, redirect to dashboard immediately
+  React.useEffect(() => {
+    if (!authStatusLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, authStatusLoading, router]);
+
   async function handleGoogleSignIn() {
-    // Prevent multiple simultaneous sign-in attempts which can trigger cancellation errors
-    if (isLoading) return;
+    if (isSigningIn) return;
     
-    setIsLoading(true);
+    setIsSigningIn(true);
     setAuthError(null);
+    
     const provider = new GoogleAuthProvider();
     
-    // Force account selection to ensure the popup has active content immediately
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
-
     try {
-      await signInWithPopup(auth, provider);
-      router.push('/dashboard');
+      // Ensure persistence is set to local before signing in to maintain session
+      await setPersistence(auth, browserLocalPersistence);
+      
+      const result = await signInWithPopup(auth, provider);
+      if (result.user) {
+        router.push('/dashboard');
+      }
     } catch (error: any) {
-      console.error("Auth Error:", error);
+      console.error("Auth Error Details:", error);
       
       let message = error.message;
       
-      // Handle common Firebase Auth error codes with user-friendly explanations
+      // Handle specific Firebase Auth error codes with helpful context
       if (error.code === 'auth/popup-closed-by-user') {
-        message = "The sign-in popup was closed before completion. This can happen if you close the window, or if a browser extension blocked it. Please try again.";
+        message = "The sign-in popup was closed or lost focus. This often happens if the browser blocks the window or if you switch tabs. Please click the button and stay on this window until finished.";
       } else if (error.code === 'auth/cancelled-popup-request') {
-        message = "A previous sign-in request was still pending. Please wait a moment and try again.";
+        message = "A previous sign-in attempt was interrupted. Please wait a moment and try again.";
       } else if (error.code === 'auth/popup-blocked') {
-        message = "The sign-in popup was blocked by your browser. Please allow popups for this site and try again.";
+        message = "The sign-in popup was blocked. Please check your browser's address bar for a 'popup blocked' icon and allow popups for this site.";
+      } else if (error.code === 'auth/unauthorized-domain') {
+        message = "This domain is not authorized for Google Sign-In. You may need to add your current domain to the 'Authorized Domains' list in the Firebase Console.";
       }
 
       setAuthError(message);
       
       toast({
-        title: "Authentication Error",
+        title: "Sign-in Issue",
         description: message,
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSigningIn(false);
     }
+  }
+
+  // Show a clean loading state if we're checking initial auth status
+  if (authStatusLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -67,7 +86,7 @@ export default function AuthPage() {
       <Card className="w-full max-w-md border-primary/20 bg-card/50 backdrop-blur-xl relative z-10 shadow-2xl">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-4">
-            <div className="flex aspect-square size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-2xl shadow-primary/40 animate-pulse">
+            <div className="flex aspect-square size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-2xl shadow-primary/40">
               <Zap className="size-8" fill="currentColor" />
             </div>
           </div>
@@ -75,14 +94,14 @@ export default function AuthPage() {
             ZENTRIX<span className="text-primary">PAY</span>
           </CardTitle>
           <CardDescription className="text-base text-muted-foreground/80">
-            Securely access your rewards dashboard.
+            Access your rewards and feedback dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6 pb-8 space-y-6">
           {authError && (
             <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive animate-in fade-in slide-in-from-top-1">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Authentication Failed</AlertTitle>
+              <AlertTitle>Authentication Help</AlertTitle>
               <AlertDescription className="text-xs">
                 {authError}
               </AlertDescription>
@@ -93,9 +112,9 @@ export default function AuthPage() {
             <Button 
               className="w-full h-14 font-bold text-lg bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all active:scale-95" 
               onClick={handleGoogleSignIn} 
-              disabled={isLoading}
+              disabled={isSigningIn}
             >
-              {isLoading ? (
+              {isSigningIn ? (
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               ) : (
                 <>
@@ -126,18 +145,17 @@ export default function AuthPage() {
             </Button>
             
             <p className="text-center text-xs text-muted-foreground font-medium px-4">
-              Access your earnings, marketplace tasks, and instant payouts.
+              Join thousands of users earning for their reviews.
             </p>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 border-t border-border/50 pt-6">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            By signing in, you agree to our <span className="text-primary hover:underline cursor-pointer">Terms of Service</span> and <span className="text-primary hover:underline cursor-pointer">Privacy Policy</span>.
+            By signing in, you agree to our <span className="text-primary hover:underline cursor-pointer">Terms</span> and <span className="text-primary hover:underline cursor-pointer">Privacy</span>.
           </p>
         </CardFooter>
       </Card>
       
-      {/* Decorative background elements */}
       <div className="absolute -bottom-24 -right-24 size-64 bg-primary/10 rounded-full blur-3xl" />
       <div className="absolute -top-24 -left-24 size-64 bg-accent/5 rounded-full blur-3xl" />
     </div>

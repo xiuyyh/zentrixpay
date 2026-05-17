@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -6,25 +7,52 @@ import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, Loader2 } from 'lucide-react';
+import { Zap, Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AuthPage() {
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [authError, setAuthError] = React.useState<string | null>(null);
 
   async function handleGoogleSignIn() {
+    // Prevent multiple simultaneous sign-in attempts which can trigger cancellation errors
+    if (isLoading) return;
+    
     setIsLoading(true);
+    setAuthError(null);
     const provider = new GoogleAuthProvider();
+    
+    // Force account selection to ensure the popup has active content immediately
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+
     try {
       await signInWithPopup(auth, provider);
       router.push('/dashboard');
     } catch (error: any) {
+      console.error("Auth Error:", error);
+      
+      let message = error.message;
+      
+      // Handle common Firebase Auth error codes with user-friendly explanations
+      if (error.code === 'auth/popup-closed-by-user') {
+        message = "The sign-in popup was closed before completion. This can happen if you close the window, or if a browser extension blocked it. Please try again.";
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        message = "A previous sign-in request was still pending. Please wait a moment and try again.";
+      } else if (error.code === 'auth/popup-blocked') {
+        message = "The sign-in popup was blocked by your browser. Please allow popups for this site and try again.";
+      }
+
+      setAuthError(message);
+      
       toast({
         title: "Authentication Error",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -50,7 +78,17 @@ export default function AuthPage() {
             Securely access your rewards dashboard.
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-6 pb-8">
+        <CardContent className="pt-6 pb-8 space-y-6">
+          {authError && (
+            <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Authentication Failed</AlertTitle>
+              <AlertDescription className="text-xs">
+                {authError}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-4">
             <Button 
               className="w-full h-14 font-bold text-lg bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all active:scale-95" 

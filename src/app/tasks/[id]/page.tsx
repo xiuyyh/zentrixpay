@@ -13,7 +13,7 @@ const tasks = [
   {
     id: "1",
     company: "SwiftPay Solutions",
-    reward: "$5.00",
+    reward: "₦5,000",
     category: "Fintech",
     rating: 4.8,
     reviews: 1240,
@@ -25,7 +25,7 @@ const tasks = [
   {
     id: "2",
     company: "EcoSphere Systems",
-    reward: "$7.50",
+    reward: "₦7,500",
     category: "Software",
     rating: 4.2,
     reviews: 850,
@@ -37,7 +37,7 @@ const tasks = [
   {
       id: "3",
       company: "HealthCore AI",
-      reward: "$4.00",
+      reward: "₦4,000",
       category: "HealthTech",
       rating: 4.5,
       reviews: 2100,
@@ -49,7 +49,7 @@ const tasks = [
   {
       id: "4",
       company: "Logix Global",
-      reward: "$12.00",
+      reward: "₦12,000",
       category: "Logistics",
       rating: 3.9,
       reviews: 4500,
@@ -72,7 +72,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
     <div className="max-w-5xl mx-auto w-full space-y-8 animate-in fade-in duration-500">
       <Link href="/tasks" className="flex items-center text-sm text-muted-foreground hover:text-accent transition-colors group">
         <ChevronLeft className="size-4 mr-1 group-hover:-translate-x-1 transition-transform" />
-        Back to Marketplace
+        Back to Tasks
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

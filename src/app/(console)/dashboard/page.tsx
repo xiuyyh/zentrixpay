@@ -1,27 +1,12 @@
 
-'use client';
-
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { BalanceDisplay } from "@/components/wallet/balance-display"
 import { Button } from "@/components/ui/button"
 import { ArrowUpRight, CheckCircle2, Clock, Zap, Wallet as WalletIcon, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { useUser, useFirestore, useDoc } from "@/firebase"
-import { doc } from "firebase/firestore"
-import * as React from "react"
 
 export default function DashboardPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
-  
-  const userProfileRef = React.useMemo(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-
-  const { data: profile } = useDoc(userProfileRef);
-
   const stats = [
     { label: "Tasks Completed", value: "12", icon: CheckCircle2, color: "text-red-500" },
     { label: "Pending Reviews", value: "3", icon: Clock, color: "text-muted-foreground" },
@@ -32,7 +17,7 @@ export default function DashboardPage() {
     <div className="space-y-8 max-w-7xl mx-auto w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h2 className="text-4xl font-headline font-bold text-foreground tracking-tight">Welcome back, {user?.displayName?.split(' ')[0] || 'Member'}.</h2>
+          <h2 className="text-4xl font-headline font-bold text-foreground tracking-tight">Welcome back.</h2>
           <p className="text-muted-foreground mt-2 font-medium">Earn up to <span className="text-primary font-bold">₦15,000.00</span> today with available tasks.</p>
         </div>
         <Link href="/tasks">
@@ -56,9 +41,9 @@ export default function DashboardPage() {
             <CardDescription>Consolidated view of your Zentrix Pay earnings.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 pt-4">
-            <BalanceDisplay amount={profile?.balance || 0} label="Available" accent />
-            <BalanceDisplay amount={profile?.pendingBalance || 0} label="Processing" />
-            <BalanceDisplay amount={profile?.lifetimeEarnings || 0} label="Lifetime Total" />
+            <BalanceDisplay amount={124500.00} label="Available" accent />
+            <BalanceDisplay amount={35000.00} label="Processing" />
+            <BalanceDisplay amount={842100.00} label="Lifetime Total" />
           </CardContent>
           <div className="bg-secondary/20 p-4 border-t border-border/50 flex justify-end gap-3">
             <Link href="/wallet">

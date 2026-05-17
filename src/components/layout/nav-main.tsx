@@ -26,7 +26,7 @@ const navItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Marketplace",
+    title: "Tasks",
     url: "/tasks",
     icon: LayoutGrid,
   },

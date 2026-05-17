@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { doc } from "firebase/firestore";
 
-export default function DashboardLayout({
+export default function WalletLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -60,6 +60,19 @@
         "submittedAt": { "type": "string", "format": "date-time" },
         "reviewId": { "type": "string" }
       }
+    },
+    "Deposit": {
+      "title": "Deposit",
+      "description": "A user's request to add funds to their wallet.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -81,6 +94,10 @@
     "/submissions/{submissionId}": {
       "schema": "Submission",
       "description": "User proof submissions."
+    },
+    "/deposits/{depositId}": {
+      "schema": "Deposit",
+      "description": "User wallet deposit requests."
     }
   }
 }

@@ -15,7 +15,7 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
-import { ShieldCheck, Users, ClipboardCheck, LayoutDashboard, LogOut, User as UserIcon, ArrowLeft, Zap } from "lucide-react"
+import { ShieldCheck, Users, ClipboardCheck, LayoutDashboard, LogOut, User as UserIcon, ArrowLeft, Zap, ArrowDownCircle } from "lucide-react"
 import { useUser, useAuth } from "@/firebase"
 import { signOut } from "firebase/auth"
 import { useRouter, usePathname } from "next/navigation"
@@ -49,9 +49,14 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       icon: Zap,
     },
     {
-      title: "Task Submissions",
+      title: "Task Verification",
       url: "/admin/submissions",
       icon: ClipboardCheck,
+    },
+    {
+      title: "Deposit Requests",
+      url: "/admin/deposits",
+      icon: ArrowDownCircle,
     },
   ]
 

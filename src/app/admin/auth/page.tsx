@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShieldAlert, Loader2, Lock, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function AdminAuthPage() {
   const auth = useAuth();
@@ -113,6 +114,13 @@ export default function AdminAuthPage() {
             >
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Verify Identity"}
             </Button>
+            
+            <div className="text-center mt-4">
+              <Link href="/admin/signup" className="text-xs text-red-500 hover:underline">
+                Create new admin account
+              </Link>
+            </div>
+
             <p className="text-[10px] text-muted-foreground text-center mt-4">
                 Unauthorized attempts are logged and monitored.
             </p>

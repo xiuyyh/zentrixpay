@@ -10,6 +10,7 @@ import { Loader2, ShieldCheck, Users, ClipboardCheck, LayoutDashboard } from "lu
 import { doc } from "firebase/firestore";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export default function AdminLayout({
   children,
@@ -21,12 +22,14 @@ export default function AdminLayout({
   const firestore = useFirestore();
   const pathname = usePathname();
 
+  const isAuthPage = pathname === '/admin/auth' || pathname === '/admin/signup';
+
   // Redirect if not authenticated as admin
   React.useEffect(() => {
-    if (!authLoading && !user) {
+    if (!authLoading && !user && !isAuthPage) {
       router.push('/admin/auth');
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, isAuthPage]);
 
   const userProfileRef = React.useMemo(() => {
     if (!firestore || !user) return null;
@@ -36,10 +39,10 @@ export default function AdminLayout({
   const { data: profile, loading: profileLoading } = useDoc(userProfileRef);
 
   React.useEffect(() => {
-    if (!profileLoading && profile && profile.role !== 'admin' && pathname !== '/admin/auth') {
+    if (!profileLoading && profile && profile.role !== 'admin' && !isAuthPage) {
       router.push('/dashboard');
     }
-  }, [profile, profileLoading, router, pathname]);
+  }, [profile, profileLoading, router, isAuthPage]);
 
   if (authLoading || (user && profileLoading)) {
     return (
@@ -52,7 +55,7 @@ export default function AdminLayout({
     );
   }
 
-  if (pathname === '/admin/auth') return <>{children}</>;
+  if (isAuthPage) return <>{children}</>;
   if (!user || profile?.role !== 'admin') return null;
 
   return (

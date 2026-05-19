@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,8 +10,8 @@ import {
   setPersistence, 
   browserLocalPersistence 
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { doc, setDoc, updateDoc, increment } from 'firebase/firestore';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ export default function AuthPage() {
   const db = useFirestore();
   const { user, loading: authStatusLoading } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = React.useState(false);
@@ -33,6 +35,8 @@ export default function AuthPage() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [displayName, setDisplayName] = React.useState('');
+
+  const referralCode = searchParams.get('ref');
 
   React.useEffect(() => {
     if (!authStatusLoading && user) {
@@ -62,8 +66,19 @@ export default function AuthPage() {
           balance: 0,
           pendingBalance: 0,
           lifetimeEarnings: 0,
-          payoutMethod: 'Bank Transfer'
+          payoutMethod: 'Bank Transfer',
+          referralCount: 0,
+          referredBy: referralCode || null,
+          role: 'user'
         });
+
+        // If referred, update referrer's count
+        if (referralCode) {
+          const referrerRef = doc(db, 'users', referralCode);
+          updateDoc(referrerRef, {
+            referralCount: increment(1)
+          }).catch(err => console.error("Referrer update failed", err));
+        }
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
@@ -103,7 +118,6 @@ export default function AuthPage() {
       
       <Card className="w-full max-w-5xl border-primary/20 bg-card/50 backdrop-blur-xl relative z-10 shadow-2xl overflow-hidden rounded-3xl">
         <div className="flex flex-col md:flex-row min-h-[600px]">
-          {/* Left Side: Branding and Promo (Desktop Landscape) */}
           <div className="md:w-1/2 bg-gradient-to-br from-primary via-primary/80 to-black p-8 lg:p-12 flex flex-col justify-between relative">
             <div className="absolute top-0 left-0 w-full h-full bg-[url('https://picsum.photos/seed/zentrix/800/800')] opacity-10 mix-blend-overlay" />
             
@@ -139,11 +153,15 @@ export default function AuthPage() {
             </div>
           </div>
 
-          {/* Right Side: Auth Forms */}
           <div className="md:w-1/2 p-8 lg:p-12 bg-card/80 flex flex-col justify-center">
             <div className="mb-8 text-center md:text-left">
               <h2 className="text-2xl font-headline font-bold tracking-tight">Access Console</h2>
               <p className="text-sm text-muted-foreground mt-1">Manage your feedback tasks and wallet.</p>
+              {referralCode && (
+                <Badge variant="secondary" className="mt-2 bg-primary/10 text-primary border-primary/20">
+                  Referral code active: {referralCode}
+                </Badge>
+              )}
             </div>
 
             {authError && (
@@ -261,4 +279,12 @@ export default function AuthPage() {
       <div className="absolute -top-24 -left-24 size-64 bg-accent/5 rounded-full blur-3xl" />
     </div>
   );
+}
+
+function Badge({ children, variant, className }: { children: React.ReactNode, variant?: any, className?: string }) {
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}>
+      {children}
+    </span>
+  )
 }

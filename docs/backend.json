@@ -16,7 +16,8 @@
         "payoutMethod": { "type": "string", "description": "The user's preferred payout method (e.g., Bank Transfer, PayPal)." },
         "role": { "type": "string", "enum": ["user", "admin"], "description": "The user's role on the platform." },
         "activePlanId": { "type": "string", "description": "The ID of the user's current investment plan." },
-        "referralCount": { "type": "number", "description": "Number of users referred." }
+        "referralCount": { "type": "number", "description": "Number of users referred." },
+        "referredBy": { "type": "string", "description": "The UID of the user who referred this user." }
       },
       "required": ["uid", "email"]
     },

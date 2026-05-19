@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useDoc } from "@/firebase";
-import { doc, updateDoc, increment } from "firebase/firestore";
+import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { Check, Zap, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,6 +33,7 @@ export default function PlansPage() {
   async function handlePurchase(plan: typeof AVAILABLE_PLANS[0]) {
     if (!user || !profile || !db) return;
     
+    // Check balance
     if (profile.balance < plan.price) {
       toast({
         title: "Insufficient Funds",
@@ -44,10 +45,28 @@ export default function PlansPage() {
 
     setLoadingId(plan.id);
     try {
+      // 1. Deduct balance and set plan
       await updateDoc(doc(db, 'users', user.uid), {
         balance: increment(-plan.price),
         activePlanId: plan.id,
       });
+
+      // 2. Handle Referral Commission (5%)
+      if (profile.referredBy) {
+        const commission = plan.price * 0.05;
+        const referrerRef = doc(db, 'users', profile.referredBy);
+        const referrerSnap = await getDoc(referrerRef);
+        
+        if (referrerSnap.exists()) {
+          await updateDoc(referrerRef, {
+            balance: increment(commission),
+            lifetimeEarnings: increment(commission)
+          });
+          
+          console.log(`Awarded ₦${commission} commission to referrer ${profile.referredBy}`);
+        }
+      }
+
       toast({
         title: "Plan Activated!",
         description: `You are now on the ${plan.name}. Start completing tasks to earn!`,

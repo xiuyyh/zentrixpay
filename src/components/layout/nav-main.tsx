@@ -9,7 +9,8 @@ import {
   History,
   ShieldCheck,
   ShieldAlert,
-  Zap
+  Zap,
+  Users
 } from "lucide-react"
 import {
   SidebarGroup,
@@ -39,6 +40,11 @@ const navItems = [
     title: "Tasks",
     url: "/tasks",
     icon: LayoutGrid,
+  },
+  {
+    title: "Referrals",
+    url: "/referrals",
+    icon: Users,
   },
   {
     title: "Wallet",

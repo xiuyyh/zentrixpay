@@ -6,11 +6,11 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { Separator } from "@/components/ui/separator";
 import { useUser, useFirestore, useDoc } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, ShieldCheck, Users, ClipboardCheck, LayoutDashboard } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 import { doc } from "firebase/firestore";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { AdminSidebar } from "@/components/layout/admin-sidebar";
 
 export default function AdminLayout({
   children,
@@ -46,7 +46,7 @@ export default function AdminLayout({
 
   if (authLoading || (user && profileLoading)) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center gap-4 bg-background">
+      <div className="h-screen w-screen flex flex-col items-center justify-center gap-4 bg-zinc-950">
         <Loader2 className="size-8 animate-spin text-red-500" />
         <p className="text-xs font-headline font-bold uppercase tracking-widest text-muted-foreground animate-pulse">
           Elevating System Privileges
@@ -59,46 +59,29 @@ export default function AdminLayout({
   if (!user || profile?.role !== 'admin') return null;
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-zinc-950">
-      <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-white/5 bg-zinc-950/80 px-6 backdrop-blur-md">
-        <div className="flex items-center gap-2">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-red-600 text-white shadow-lg shadow-red-500/20">
-                <ShieldCheck className="size-4" />
-            </div>
-            <h1 className="font-headline font-bold text-lg tracking-tighter">
-                ZENTRIX<span className="text-red-500">ADMIN</span>
-            </h1>
-        </div>
-        <Separator orientation="vertical" className="mx-2 h-4 bg-white/10" />
-        <nav className="flex items-center gap-6 text-sm font-medium">
-          <Link 
-            href="/admin/dashboard" 
-            className={`flex items-center gap-2 transition-colors hover:text-red-500 ${pathname === '/admin/dashboard' ? 'text-red-500' : 'text-muted-foreground'}`}
-          >
-            <Users className="size-4" />
-            Users
-          </Link>
-          <Link 
-            href="/admin/submissions" 
-            className={`flex items-center gap-2 transition-colors hover:text-red-500 ${pathname === '/admin/submissions' ? 'text-red-500' : 'text-muted-foreground'}`}
-          >
-            <ClipboardCheck className="size-4" />
-            Submissions
-          </Link>
-        </nav>
-        <div className="ml-auto flex items-center gap-4">
-          <div className="hidden md:flex flex-col items-end">
-             <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Root Console</span>
-             <span className="text-xs text-muted-foreground">{user.email}</span>
+    <SidebarProvider>
+      <AdminSidebar />
+      <SidebarInset className="bg-zinc-950">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-white/5 px-4 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-50">
+          <SidebarTrigger className="-ml-1 text-zinc-400 hover:text-white" />
+          <Separator orientation="vertical" className="mr-2 h-4 bg-white/10" />
+          <div className="flex-1">
+             <h1 className="text-[10px] font-bold uppercase tracking-widest text-red-500">Root Management Console</h1>
           </div>
-          <Link href="/dashboard">
-            <Button variant="outline" size="sm" className="h-8 text-xs font-bold border-white/10">User View</Button>
-          </Link>
-        </div>
-      </header>
-      <main className="flex-1 p-6 md:p-8">
-        {children}
-      </main>
-    </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right hidden sm:block">
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Status</p>
+                <div className="flex items-center gap-1.5 justify-end">
+                    <div className="size-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <p className="text-xs font-bold text-white">Encrypted Session</p>
+                </div>
+            </div>
+          </div>
+        </header>
+        <main className="flex flex-1 flex-col p-6 overflow-x-hidden">
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

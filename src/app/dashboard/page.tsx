@@ -4,12 +4,23 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { BalanceDisplay } from "@/components/wallet/balance-display"
 import { Button } from "@/components/ui/button"
-import { ArrowUpRight, CheckCircle2, Clock, Zap, Wallet as WalletIcon, TrendingUp } from "lucide-react"
+import { ArrowUpRight, CheckCircle2, Clock, Zap, Wallet as WalletIcon, TrendingUp, AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useUser, useFirestore, useDoc } from "@/firebase"
 import { doc } from "firebase/firestore"
 import * as React from "react"
+
+const PLAN_NAMES: Record<string, string> = {
+  "p15k": "₦15,000 Starter",
+  "p35k": "₦35,000 Basic",
+  "p70k": "₦70,000 Bronze",
+  "p100k": "₦100,000 Silver",
+  "p150k": "₦150,000 Gold",
+  "p200k": "₦200,000 Platinum",
+  "p300k": "₦300,000 Diamond",
+  "p500k": "₦500,000 Executive",
+};
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -24,8 +35,8 @@ export default function DashboardPage() {
 
   const stats = [
     { label: "Tasks Completed", value: "12", icon: CheckCircle2, color: "text-red-500" },
-    { label: "Pending Reviews", value: "3", icon: Clock, color: "text-muted-foreground" },
-    { label: "Earnings Potential", value: "₦450,000.00", icon: Zap, color: "text-accent" },
+    { label: "Active Plan", value: profile?.activePlanId ? PLAN_NAMES[profile.activePlanId] : "No Active Plan", icon: Zap, color: "text-accent" },
+    { label: "Referrals", value: profile?.referralCount || "0", icon: TrendingUp, color: "text-green-500" },
   ]
 
   return (
@@ -33,14 +44,30 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h2 className="text-4xl font-headline font-bold text-foreground tracking-tight">Welcome back, {user?.displayName?.split(' ')[0] || 'Member'}.</h2>
-          <p className="text-muted-foreground mt-2 font-medium">Earn up to <span className="text-primary font-bold">₦15,000.00</span> today with available tasks.</p>
+          {!profile?.activePlanId && (
+            <p className="text-accent mt-2 font-bold animate-pulse flex items-center gap-2">
+              <AlertTriangle className="size-4" />
+              Activate a plan to start earning rewards.
+            </p>
+          )}
+          {profile?.activePlanId && (
+            <p className="text-muted-foreground mt-2 font-medium">Your current tier is <span className="text-primary font-bold">{PLAN_NAMES[profile.activePlanId]}</span>.</p>
+          )}
         </div>
-        <Link href="/tasks">
-          <Button className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl px-8 h-12 shadow-lg shadow-primary/20 group">
-            Browse Tasks
-            <ArrowUpRight className="ml-2 size-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-          </Button>
-        </Link>
+        {!profile?.activePlanId ? (
+          <Link href="/plans">
+            <Button className="bg-accent hover:bg-accent/90 text-white font-bold rounded-xl px-8 h-12 shadow-lg shadow-accent/20">
+              Activate Plan
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/tasks">
+            <Button className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl px-8 h-12 shadow-lg shadow-primary/20 group">
+              Browse Tasks
+              <ArrowUpRight className="ml-2 size-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -76,7 +103,7 @@ export default function DashboardPage() {
                     <CardContent className="p-6 flex items-center justify-between">
                         <div>
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</p>
-                            <p className="text-2xl font-headline font-bold mt-1">{stat.value}</p>
+                            <p className="text-xl font-headline font-bold mt-1">{stat.value}</p>
                         </div>
                         <div className={cn("p-3 rounded-xl bg-secondary/50", stat.color)}>
                             <stat.icon className="size-5" />
@@ -85,51 +112,6 @@ export default function DashboardPage() {
                 </Card>
             ))}
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-border/40 bg-card">
-          <CardHeader>
-            <CardTitle className="font-headline text-lg">Top Performing Sectors</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-5">
-               {[
-                 { cat: "Fintech", amount: "₦320k", percent: 75, color: "bg-primary" },
-                 { cat: "AI & Software", amount: "₦150k", percent: 45, color: "bg-accent" },
-                 { cat: "E-commerce", amount: "₦90k", percent: 30, color: "bg-muted-foreground" }
-               ].map(item => (
-                 <div key={item.cat} className="space-y-2">
-                   <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                     <span className="text-muted-foreground">{item.cat}</span>
-                     <span className="text-foreground">{item.amount}</span>
-                   </div>
-                   <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-                     <div className={cn("h-full transition-all duration-1000", item.color)} style={{ width: `${item.percent}%` }} />
-                   </div>
-                 </div>
-               ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/40 bg-card">
-          <CardHeader>
-             <CardTitle className="font-headline text-lg">Platform Updates</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-             <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 group cursor-pointer hover:bg-primary/10 transition-colors">
-                <p className="text-xs font-bold text-primary uppercase tracking-widest">Rewards Program</p>
-                <p className="text-sm font-semibold mt-1">Tier 2 Bonuses Active</p>
-                <p className="text-xs text-muted-foreground mt-1">Complete 5 tasks today for a 10% bonus multiplier.</p>
-             </div>
-             <div className="p-4 rounded-xl bg-secondary/30 border border-border/50">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">System Status</p>
-                <p className="text-sm font-semibold mt-1">Instant Payouts Live</p>
-                <p className="text-xs text-muted-foreground mt-1">Withdrawals via Bank Transfer are now instant.</p>
-             </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

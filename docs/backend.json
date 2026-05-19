@@ -14,20 +14,48 @@
         "pendingBalance": { "type": "number", "description": "The user's pending balance from unverified reviews." },
         "lifetimeEarnings": { "type": "number", "description": "The total amount the user has ever earned." },
         "payoutMethod": { "type": "string", "description": "The user's preferred payout method (e.g., Bank Transfer, PayPal)." },
-        "role": { "type": "string", "enum": ["user", "admin"], "description": "The user's role on the platform." }
+        "role": { "type": "string", "enum": ["user", "admin"], "description": "The user's role on the platform." },
+        "activePlanId": { "type": "string", "description": "The ID of the user's current investment plan." },
+        "referralCount": { "type": "number", "description": "Number of users referred." }
       },
       "required": ["uid", "email"]
     },
+    "Plan": {
+      "title": "Investment Plan",
+      "description": "Defines an earning tier that users can purchase.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "dailyReturn": { "type": "number" },
+        "totalReturn": { "type": "number" },
+        "durationDays": { "type": "number" },
+        "netPayout": { "type": "number" }
+      }
+    },
     "ReviewTask": {
       "title": "Review Task",
-      "description": "A task assigned to a user to review a specific company.",
+      "description": "A task assigned to a plan or user.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "companyName": { "type": "string" },
         "rewardAmount": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "verified", "rejected"] },
+        "planId": { "type": "string", "description": "The plan tier required for this task." },
+        "description": { "type": "string" },
+        "trustpilotUrl": { "type": "string" }
+      }
+    },
+    "Submission": {
+      "title": "Task Submission",
+      "description": "A user's proof of review submission.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
         "userId": { "type": "string" },
+        "taskId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "verified", "rejected"] },
         "submittedAt": { "type": "string", "format": "date-time" },
         "reviewId": { "type": "string" }
       }
@@ -39,11 +67,19 @@
   "firestore": {
     "/users/{userId}": {
       "schema": "UserProfile",
-      "description": "User profile document containing balance and earnings data."
+      "description": "User profile document."
+    },
+    "/plans/{planId}": {
+      "schema": "Plan",
+      "description": "Available investment plans."
+    },
+    "/tasks/{taskId}": {
+      "schema": "ReviewTask",
+      "description": "Available tasks for specific plans."
     },
     "/submissions/{submissionId}": {
-      "schema": "ReviewTask",
-      "description": "Collection of review submissions from users for verification."
+      "schema": "Submission",
+      "description": "User proof submissions."
     }
   }
 }

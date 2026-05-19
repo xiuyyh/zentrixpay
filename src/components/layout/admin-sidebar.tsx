@@ -15,7 +15,7 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
-import { ShieldCheck, Users, ClipboardCheck, LayoutDashboard, LogOut, User as UserIcon, ArrowLeft } from "lucide-react"
+import { ShieldCheck, Users, ClipboardCheck, LayoutDashboard, LogOut, User as UserIcon, ArrowLeft, Zap } from "lucide-react"
 import { useUser, useAuth } from "@/firebase"
 import { signOut } from "firebase/auth"
 import { useRouter, usePathname } from "next/navigation"
@@ -34,12 +34,22 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
 
   const navItems = [
     {
+      title: "Dashboard",
+      url: "/admin/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
       title: "User Directory",
       url: "/admin/dashboard",
       icon: Users,
     },
     {
-      title: "Submissions",
+      title: "Plan Distribution",
+      url: "/admin/plans",
+      icon: Zap,
+    },
+    {
+      title: "Task Submissions",
       url: "/admin/submissions",
       icon: ClipboardCheck,
     },

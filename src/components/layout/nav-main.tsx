@@ -8,7 +8,8 @@ import {
   Settings,
   History,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  Zap
 } from "lucide-react"
 import {
   SidebarGroup,
@@ -30,6 +31,11 @@ const navItems = [
     icon: LayoutDashboard,
   },
   {
+    title: "Investment Plans",
+    url: "/plans",
+    icon: Zap,
+  },
+  {
     title: "Tasks",
     url: "/tasks",
     icon: LayoutGrid,
@@ -39,14 +45,14 @@ const navItems = [
     url: "/wallet",
     icon: Wallet,
   },
+]
+
+const accountItems = [
   {
     title: "History",
     url: "/history",
     icon: History,
   },
-]
-
-const settingsItems = [
   {
     title: "Verification",
     url: "/verification",
@@ -118,7 +124,7 @@ export function NavMain() {
       <SidebarGroup>
         <SidebarGroupLabel>Account</SidebarGroupLabel>
         <SidebarMenu>
-          {settingsItems.map((item) => (
+          {accountItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild

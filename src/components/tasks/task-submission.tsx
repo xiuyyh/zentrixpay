@@ -6,29 +6,65 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { CheckCircle2, ShieldCheck, Upload } from "lucide-react"
+import { CheckCircle2, ShieldCheck, Upload, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useFirestore, useUser } from "@/firebase"
+import { collection, addDoc, doc, updateDoc, increment, serverTimestamp } from "firebase/firestore"
 
-export function TaskSubmission() {
+interface TaskSubmissionProps {
+  task?: {
+    id: string;
+    company: string;
+    reward: string;
+  }
+}
+
+export function TaskSubmission({ task }: TaskSubmissionProps) {
   const [reviewId, setReviewId] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [submitted, setSubmitted] = React.useState(false)
   const { toast } = useToast()
+  const { user } = useUser()
+  const db = useFirestore()
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!reviewId) return
+    if (!reviewId || !user || !db || !task) return
     
     setIsSubmitting(true)
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      const rewardValue = parseInt(task.reward.replace(/[^0-9]/g, '')) || 0;
+      
+      // 1. Create submission
+      await addDoc(collection(db, 'submissions'), {
+        companyName: task.company,
+        rewardAmount: rewardValue,
+        status: 'pending',
+        userId: user.uid,
+        submittedAt: new Date().toISOString(),
+        reviewId: reviewId,
+      });
+
+      // 2. Update user pending balance
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        pendingBalance: increment(rewardValue)
+      });
+
       setSubmitted(true)
       toast({
         title: "Submission Received",
         description: "Your review is now being verified. This usually takes 24-48 hours.",
       })
-    }, 1500)
+    } catch (error: any) {
+      toast({
+        title: "Submission Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -66,6 +102,7 @@ export function TaskSubmission() {
               className="bg-background border-border h-12"
               value={reviewId}
               onChange={(e) => setReviewId(e.target.value)}
+              required
             />
             <p className="text-[10px] text-muted-foreground">Find your Review ID in the confirmation email from Trustpilot.</p>
           </div>
@@ -93,7 +130,7 @@ export function TaskSubmission() {
             disabled={!reviewId || isSubmitting}
             className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12"
           >
-            {isSubmitting ? "Verifying..." : "Claim Reward"}
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Claim Reward"}
           </Button>
         </form>
       </CardContent>

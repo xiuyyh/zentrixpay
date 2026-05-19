@@ -159,7 +159,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         <div className="space-y-6">
-           <TaskSubmission />
+           <TaskSubmission task={task} />
 
            <div className="p-6 rounded-2xl bg-secondary/20 border border-border space-y-4">
               <h4 className="font-headline font-semibold text-sm">Security & Trust</h4>

@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -12,7 +13,8 @@
         "balance": { "type": "number", "description": "The user's current available balance in Naira." },
         "pendingBalance": { "type": "number", "description": "The user's pending balance from unverified reviews." },
         "lifetimeEarnings": { "type": "number", "description": "The total amount the user has ever earned." },
-        "payoutMethod": { "type": "string", "description": "The user's preferred payout method (e.g., Bank Transfer, PayPal)." }
+        "payoutMethod": { "type": "string", "description": "The user's preferred payout method (e.g., Bank Transfer, PayPal)." },
+        "role": { "type": "string", "enum": ["user", "admin"], "description": "The user's role on the platform." }
       },
       "required": ["uid", "email"]
     },

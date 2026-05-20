@@ -1,11 +1,10 @@
 'use client';
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyCskjNKLf0HUH5U2ZU-UcY6f6mGho__U24",
-  authDomain: "ai-video-platform-5a456.firebaseapp.com",
-  projectId: "ai-video-platform-5a456",
-  storageBucket: "ai-video-platform-5a456.firebasestorage.app",
-  messagingSenderId: "328657911625",
-  appId: "1:328657911625:web:062da02e203a7115af2498",
-  measurementId: "G-4F6YYVPPJ4"
+  apiKey: "AIzaSyAkKfuD_8KWINI49MHBrnhg1HTXBbnnrlQ",
+  authDomain: "studio-4731861090-5b672.firebaseapp.com",
+  projectId: "studio-4731861090-5b672",
+  storageBucket: "studio-4731861090-5b672.firebasestorage.app",
+  messagingSenderId: "107041831057",
+  appId: "1:107041831057:web:1f7e5f081e85b497496730"
 };

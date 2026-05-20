@@ -1,71 +1,49 @@
+'use client';
 
+import * as React from 'react';
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Star, ChevronLeft, Info, CheckCircle2 } from "lucide-react"
+import { ExternalLink, Star, ChevronLeft, Info, CheckCircle2, Loader2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { ReviewTool } from "@/components/tasks/review-tool"
 import { TaskSubmission } from "@/components/tasks/task-submission"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
-import { notFound } from "next/navigation"
+import { useFirestore, useDoc } from "@/firebase"
+import { doc } from "firebase/firestore"
+import { useParams } from "next/navigation"
 
-const tasks = [
-  {
-    id: "1",
-    company: "SwiftPay Solutions",
-    reward: "₦5,000",
-    category: "Fintech",
-    rating: 4.8,
-    reviews: 1240,
-    difficulty: "Low",
-    image: PlaceHolderImages[2].imageUrl,
-    description: "SwiftPay Solutions provides fast and secure cross-border payment processing for startups and enterprises. We are looking for genuine feedback regarding our transaction speed and onboarding process.",
-    trustpilotUrl: "https://www.trustpilot.com/review/swiftpaysolutions.com"
-  },
-  {
-    id: "2",
-    company: "EcoSphere Systems",
-    reward: "₦7,500",
-    category: "Software",
-    rating: 4.2,
-    reviews: 850,
-    difficulty: "Medium",
-    image: PlaceHolderImages[1].imageUrl,
-    description: "EcoSphere Systems is an all-in-one sustainability management platform. Share your experience with our dashboard and carbon footprint calculation accuracy.",
-    trustpilotUrl: "https://www.trustpilot.com/review/ecospheresystems.io"
-  },
-  {
-      id: "3",
-      company: "HealthCore AI",
-      reward: "₦4,000",
-      category: "HealthTech",
-      rating: 4.5,
-      reviews: 2100,
-      difficulty: "Low",
-      image: PlaceHolderImages[3].imageUrl,
-      description: "HealthCore AI provides AI-powered medical transcription and scheduling. Let us know how our tool has improved your clinic's workflow.",
-      trustpilotUrl: "https://www.trustpilot.com/review/healthcore.ai"
-  },
-  {
-      id: "4",
-      company: "Logix Global",
-      reward: "₦12,000",
-      category: "Logistics",
-      rating: 3.9,
-      reviews: 4500,
-      difficulty: "High",
-      image: PlaceHolderImages[0].imageUrl,
-      description: "Logix Global is a leading supply chain logistics provider. We value feedback on our international shipping reliability and container tracking system.",
-      trustpilotUrl: "https://www.trustpilot.com/review/logixglobal.com"
+export default function TaskDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const firestore = useFirestore();
+  
+  const taskRef = React.useMemo(() => {
+    if (!firestore || !id) return null;
+    return doc(firestore, 'tasks', id);
+  }, [firestore, id]);
+
+  const { data: task, loading, error } = useDoc(taskRef);
+
+  if (loading) {
+    return (
+      <div className="h-96 flex flex-col items-center justify-center gap-4">
+        <Loader2 className="size-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Retrieving task parameters...</p>
+      </div>
+    );
   }
-]
 
-export default async function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const task = tasks.find(t => t.id === id)
-
-  if (!task) {
-    return notFound()
+  if (error || !task) {
+    return (
+      <div className="h-96 flex flex-col items-center justify-center gap-4 text-center">
+        <h2 className="text-2xl font-bold">Task Not Found</h2>
+        <p className="text-muted-foreground">The task you are looking for does not exist or has been removed.</p>
+        <Link href="/tasks">
+          <Button variant="outline">Back to Tasks</Button>
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -80,24 +58,24 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <div className="size-24 relative rounded-3xl overflow-hidden border-2 border-border bg-white p-4 shrink-0">
                <Image 
-                 src={task.image} 
-                 alt={task.company} 
+                 src={PlaceHolderImages[0].imageUrl} 
+                 alt={task.companyName} 
                  fill 
                  className="object-contain"
                />
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                 <h1 className="text-3xl font-headline font-bold">{task.company}</h1>
-                 <Badge className="bg-primary/20 text-primary border-primary/20">{task.category}</Badge>
+                 <h1 className="text-3xl font-headline font-bold">{task.companyName}</h1>
+                 <Badge className="bg-primary/20 text-primary border-primary/20">Verified Partner</Badge>
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex items-center text-yellow-500 font-bold">
                   <Star className="size-5 fill-current mr-1" />
-                  {task.rating}
+                  4.8
                 </div>
                 <div className="text-muted-foreground text-sm">
-                   {task.reviews.toLocaleString()} reviews on Trustpilot
+                   Trusted on Trustpilot
                 </div>
               </div>
             </div>
@@ -114,7 +92,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
             <div className="mt-6 flex flex-wrap gap-6">
                <div className="space-y-1">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Reward</p>
-                  <p className="text-xl font-bold text-accent">{task.reward}</p>
+                  <p className="text-xl font-bold text-accent">₦{task.rewardAmount?.toLocaleString()}</p>
                </div>
                <div className="space-y-1">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Est. Time</p>
@@ -122,7 +100,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
                </div>
                <div className="space-y-1">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Approval Rate</p>
-                  <p className="text-xl font-bold">98%</p>
+                  <p className="text-xl font-bold">99.2%</p>
                </div>
             </div>
           </div>
@@ -147,7 +125,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
           </div>
 
           <div className="flex gap-4">
-            <Link href={task.trustpilotUrl} target="_blank" className="flex-1">
+            <Link href={task.trustpilotUrl || "#"} target="_blank" className="flex-1">
                 <Button className="w-full h-14 bg-[#00b67a] hover:bg-[#00b67a]/90 text-white font-bold text-lg rounded-xl flex items-center justify-center gap-2 shadow-xl shadow-green-500/10">
                     Review on Trustpilot
                     <ExternalLink className="size-5" />
@@ -155,11 +133,11 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
             </Link>
           </div>
 
-          <ReviewTool companyName={task.company} />
+          <ReviewTool companyName={task.companyName} />
         </div>
 
         <div className="space-y-6">
-           <TaskSubmission task={task} />
+           <TaskSubmission task={{ id: task.id, company: task.companyName, reward: `₦${task.rewardAmount}` }} />
 
            <div className="p-6 rounded-2xl bg-secondary/20 border border-border space-y-4">
               <h4 className="font-headline font-semibold text-sm">Security & Trust</h4>

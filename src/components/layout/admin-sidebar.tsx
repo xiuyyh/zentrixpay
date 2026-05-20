@@ -1,3 +1,4 @@
+'use client';
 
 "use client"
 
@@ -15,7 +16,7 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
-import { ShieldCheck, Users, ClipboardCheck, LayoutDashboard, LogOut, User as UserIcon, ArrowLeft, Zap, ArrowDownCircle } from "lucide-react"
+import { ShieldCheck, Users, ClipboardCheck, LayoutDashboard, LogOut, User as UserIcon, ArrowLeft, Zap, ArrowDownCircle, LayoutGrid } from "lucide-react"
 import { useUser, useAuth } from "@/firebase"
 import { signOut } from "firebase/auth"
 import { useRouter, usePathname } from "next/navigation"
@@ -42,6 +43,11 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       title: "User Directory",
       url: "/admin/dashboard",
       icon: Users,
+    },
+    {
+      title: "Manage Tasks",
+      url: "/admin/tasks",
+      icon: LayoutGrid,
     },
     {
       title: "Plan Distribution",

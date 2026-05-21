@@ -73,6 +73,20 @@
         "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
         "submittedAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "Withdrawal": {
+      "title": "Withdrawal",
+      "description": "A user's request to withdraw funds to their bank account.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "bankDetails": { "type": "string", "description": "Bank name, Account name, and Account number." }
+      }
     }
   },
   "auth": {
@@ -98,6 +112,10 @@
     "/deposits/{depositId}": {
       "schema": "Deposit",
       "description": "User wallet deposit requests."
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": "Withdrawal",
+      "description": "User payout requests."
     }
   }
 }

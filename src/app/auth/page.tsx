@@ -19,6 +19,7 @@ import { Zap, Loader2, AlertCircle, Mail, Lock, User as UserIcon, CheckCircle2 }
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 export default function AuthPage() {
   const auth = useAuth();
@@ -58,26 +59,32 @@ export default function AuthPage() {
         await updateProfile(result.user, { displayName });
         
         const userRef = doc(db, 'users', result.user.uid);
+        // New users get 1500 bonus
         await setDoc(userRef, {
           uid: result.user.uid,
           email: result.user.email,
           displayName: displayName,
-          balance: 0,
+          balance: 1500,
           pendingBalance: 0,
-          lifetimeEarnings: 0,
+          lifetimeEarnings: 1500,
           payoutMethod: 'Bank Transfer',
           referralCount: 0,
           referredBy: referralCode || null,
-          role: 'user'
+          role: 'user',
+          activePlanId: null
         });
 
-        // If referred, update referrer's count
         if (referralCode) {
           const referrerRef = doc(db, 'users', referralCode);
           updateDoc(referrerRef, {
             referralCount: increment(1)
           }).catch(err => console.error("Referrer update failed", err));
         }
+
+        toast({
+          title: "Welcome to Zentrix Pay",
+          description: "₦1,500 Welcome Bonus has been added to your wallet!",
+        });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
@@ -135,6 +142,7 @@ export default function AuthPage() {
 
             <div className="relative z-10 space-y-6">
               {[
+                "₦1,500 Instant Signup Bonus",
                 "Instant Payouts in Naira",
                 "AI-Powered Review Assistance",
                 "Secure & Verified Partnerships"
@@ -279,12 +287,4 @@ export default function AuthPage() {
       <div className="absolute -top-24 -left-24 size-64 bg-accent/5 rounded-full blur-3xl" />
     </div>
   );
-}
-
-function Badge({ children, variant, className }: { children: React.ReactNode, variant?: any, className?: string }) {
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground ${className}`}>
-      {children}
-    </span>
-  )
 }

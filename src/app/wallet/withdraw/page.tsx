@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button"
 import { useUser, useFirestore, useDoc } from "@/firebase"
 import { collection, addDoc, doc, updateDoc, increment } from "firebase/firestore"
-import { CheckCircle2, CreditCard, ArrowLeft, Loader2, ShieldCheck, AlertCircle, Banknote } from "lucide-react"
+import { CheckCircle2, CreditCard, ArrowLeft, Loader2, ShieldCheck, AlertCircle, Banknote, AlertTriangle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
@@ -37,7 +36,15 @@ export default function WithdrawalPage() {
     if (!amountStr || isNaN(amount) || amount < 1000) {
       router.push('/wallet');
     }
-  }, [amountStr, amount, router]);
+    if (profile && !profile.activePlanId) {
+        toast({
+            title: "Access Denied",
+            description: "An active investment plan is required for withdrawals.",
+            variant: "destructive"
+        });
+        router.push('/wallet');
+    }
+  }, [amountStr, amount, router, profile, toast]);
 
   async function handleSubmit() {
     if (!user || !db || !amount || !bankName || !accountName || !accountNumber) {
@@ -45,6 +52,11 @@ export default function WithdrawalPage() {
       return;
     }
     
+    if (!profile?.activePlanId) {
+        toast({ title: "Security Halt", description: "You must purchase a plan before withdrawing.", variant: "destructive" });
+        return;
+    }
+
     if (amount > (profile?.balance || 0)) {
         toast({ title: "Insufficient Funds", description: "Amount exceeds available balance.", variant: "destructive" });
         return;
@@ -154,20 +166,27 @@ export default function WithdrawalPage() {
                  <CardTitle className="text-lg font-headline">Verification</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                 <p className="text-xs text-muted-foreground italic">
-                    By clicking the button below, you authorize the deduction of ₦{amount.toLocaleString()} from your wallet for immediate payout.
-                 </p>
+                 {!profile?.activePlanId ? (
+                    <div className="flex items-start gap-2 p-3 bg-red-500/10 rounded-lg border border-red-500/20 mb-4">
+                       <AlertTriangle className="size-4 text-red-500 shrink-0 mt-0.5" />
+                       <p className="text-[10px] text-red-500 leading-tight">You must purchase a plan before confirming this payout.</p>
+                    </div>
+                 ) : (
+                    <p className="text-xs text-muted-foreground italic">
+                        By clicking the button below, you authorize the deduction of ₦{amount.toLocaleString()} from your wallet for immediate payout.
+                    </p>
+                 )}
 
                  <Button 
                    className="w-full h-14 bg-accent hover:bg-accent/90 text-white font-bold text-lg rounded-xl shadow-xl shadow-accent/20" 
                    onClick={handleSubmit}
-                   disabled={isSubmitting || !bankName || !accountNumber || !accountName}
+                   disabled={isSubmitting || !bankName || !accountNumber || !accountName || !profile?.activePlanId}
                  >
                     {isSubmitting ? <Loader2 className="animate-spin mr-2 size-5" /> : <Banknote className="mr-2 size-5" />}
                     Confirm Payout
                  </Button>
                  
-                 <div className="flex items-start gap-2 p-3 bg-red-500/5 rounded-lg border border-red-500/10">
+                 <div className="flex items-start gap-2 p-3 bg-red-500/5 rounded-lg border border-red-500/10 mt-4">
                     <AlertCircle className="size-4 text-red-500 shrink-0 mt-0.5" />
                     <p className="text-[10px] text-red-500 leading-tight">Minimum withdrawal is ₦1,000. Requests are final once submitted.</p>
                  </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -7,18 +6,20 @@ import { Button } from "@/components/ui/button"
 import { BalanceDisplay } from "@/components/wallet/balance-display"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { CreditCard, Download, History, PiggyBank, Smartphone, TrendingUp, Plus, ArrowUpRight, Loader2, ArrowDownLeft, Zap } from "lucide-react"
+import { CreditCard, History, PiggyBank, Smartphone, TrendingUp, Plus, ArrowUpRight, Loader2, ArrowDownLeft, Zap, AlertTriangle } from "lucide-react"
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase"
 import { doc, collection, query, where, orderBy, limit } from "firebase/firestore"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 export default function WalletPage() {
   const { user } = useUser();
   const db = useFirestore();
   const router = useRouter();
+  const { toast } = useToast();
   
   const [isDepositOpen, setIsDepositOpen] = React.useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false);
@@ -79,6 +80,15 @@ export default function WalletPage() {
   }
 
   function handleWithdrawInit() {
+    if (!profile?.activePlanId) {
+        toast({
+            title: "Plan Required",
+            description: "You must purchase an investment plan before making your first withdrawal.",
+            variant: "destructive"
+        });
+        return;
+    }
+
     const amt = Number(withdrawAmount);
     if (!withdrawAmount || isNaN(amt) || amt < 1000) return;
     if (amt > (profile?.balance || 0)) return;
@@ -264,6 +274,15 @@ export default function WalletPage() {
               Request a withdrawal from your available balance.
             </DialogDescription>
           </DialogHeader>
+          {!profile?.activePlanId && (
+            <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-500">
+               <AlertTriangle className="h-4 w-4" />
+               <AlertTitle>Action Required</AlertTitle>
+               <AlertDescription className="text-xs">
+                  You must activate an investment plan before you can withdraw your bonus or earnings.
+               </AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="with-amount">Amount (₦)</Label>
@@ -274,6 +293,7 @@ export default function WalletPage() {
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 className="h-12 text-lg font-bold"
+                disabled={!profile?.activePlanId}
               />
             </div>
             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -288,7 +308,7 @@ export default function WalletPage() {
             <Button variant="outline" onClick={() => setIsWithdrawOpen(false)}>Cancel</Button>
             <Button 
                 onClick={handleWithdrawInit} 
-                disabled={!withdrawAmount || Number(withdrawAmount) < 1000 || Number(withdrawAmount) > (profile?.balance || 0)} 
+                disabled={!profile?.activePlanId || !withdrawAmount || Number(withdrawAmount) < 1000 || Number(withdrawAmount) > (profile?.balance || 0)} 
                 className="bg-accent text-white font-bold h-10 px-6 hover:bg-accent/90"
             >
                Request Payout

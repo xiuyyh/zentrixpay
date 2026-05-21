@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -10,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShieldPlus, Loader2, Lock, Mail, User as UserIcon } from 'lucide-react';
+import { ShieldPlus, Loader2, Lock, Mail, User as UserIcon, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from 'next/link';
 
 export default function AdminSignupPage() {
@@ -22,6 +22,7 @@ export default function AdminSignupPage() {
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = React.useState(false);
+  const [authError, setAuthError] = React.useState<string | null>(null);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [displayName, setDisplayName] = React.useState('');
@@ -34,6 +35,8 @@ export default function AdminSignupPage() {
 
   async function handleSignup() {
     if (isLoading) return;
+    setAuthError(null);
+
     if (!displayName || !email || !password) {
       toast({
         title: "Validation Error",
@@ -68,9 +71,17 @@ export default function AdminSignupPage() {
       
       router.push('/admin/dashboard');
     } catch (error: any) {
+      console.error("Admin Signup Error:", error);
+      let message = error.message;
+
+      if (error.code === 'auth/operation-not-allowed') {
+        message = "Email/Password sign-in is not enabled. Please enable it in the Firebase Console under Authentication > Sign-in method.";
+      }
+
+      setAuthError(message);
       toast({
         title: "Registration Failed",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -93,6 +104,14 @@ export default function AdminSignupPage() {
             </div>
         </CardHeader>
         <CardContent className="space-y-4">
+            {authError && (
+              <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Action Required</AlertTitle>
+                <AlertDescription className="text-xs">{authError}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
                 <Label htmlFor="name" className="text-zinc-300">Admin Name</Label>
                 <div className="relative">

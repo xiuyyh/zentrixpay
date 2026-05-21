@@ -71,6 +71,7 @@ export default function AuthPage() {
           role: 'user'
         });
 
+        // If referred, update referrer's count
         if (referralCode) {
           const referrerRef = doc(db, 'users', referralCode);
           updateDoc(referrerRef, {
@@ -85,20 +86,12 @@ export default function AuthPage() {
     } catch (error: any) {
       console.error("Auth Error:", error);
       let message = error.message;
-      
-      if (error.code === 'auth/operation-not-allowed') {
-        message = "Email/Password sign-in is not enabled. Please enable it in the Firebase Console under Authentication > Sign-in method.";
-      } else if (error.code === 'auth/user-not-found') {
-        message = "No account found with this email.";
-      } else if (error.code === 'auth/wrong-password') {
-        message = "Incorrect password.";
-      } else if (error.code === 'auth/email-already-in-use') {
-        message = "An account already exists with this email.";
-      } else if (error.code === 'auth/invalid-email') {
-        message = "Invalid email format.";
-      } else if (error.code === 'auth/weak-password') {
-        message = "Password should be at least 6 characters.";
-      }
+      if (error.code === 'auth/user-not-found') message = "No account found with this email.";
+      if (error.code === 'auth/wrong-password') message = "Incorrect password.";
+      if (error.code === 'auth/email-already-in-use') message = "An account already exists with this email.";
+      if (error.code === 'auth/invalid-email') message = "Invalid email format.";
+      if (error.code === 'auth/weak-password') message = "Password should be at least 6 characters.";
+      if (error.code === 'auth/operation-not-allowed') message = "Email/Password sign-in is disabled in your Firebase project. Please enable it in Authentication > Sign-in method in the Firebase Console.";
 
       setAuthError(message);
       toast({
@@ -165,16 +158,16 @@ export default function AuthPage() {
               <h2 className="text-2xl font-headline font-bold tracking-tight">Access Console</h2>
               <p className="text-sm text-muted-foreground mt-1">Manage your feedback tasks and wallet.</p>
               {referralCode && (
-                <div className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold mt-2 bg-primary/10 text-primary border border-primary/20">
+                <Badge variant="secondary" className="mt-2 bg-primary/10 text-primary border-primary/20">
                   Referral code active: {referralCode}
-                </div>
+                </Badge>
               )}
             </div>
 
             {authError && (
               <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive mb-6">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Action Required</AlertTitle>
+                <AlertTitle>Error</AlertTitle>
                 <AlertDescription className="text-xs">{authError}</AlertDescription>
               </Alert>
             )}
@@ -286,4 +279,12 @@ export default function AuthPage() {
       <div className="absolute -top-24 -left-24 size-64 bg-accent/5 rounded-full blur-3xl" />
     </div>
   );
+}
+
+function Badge({ children, variant, className }: { children: React.ReactNode, variant?: any, className?: string }) {
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground ${className}`}>
+      {children}
+    </span>
+  )
 }

@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Wallet,
-  Settings,
   History,
   ShieldCheck,
   ShieldAlert,
@@ -63,11 +62,6 @@ const accountItems = [
     title: "Verification",
     url: "/verification",
     icon: ShieldCheck,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
   },
 ]
 

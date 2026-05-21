@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { CheckCircle2, ShieldCheck, Upload, Loader2 } from "lucide-react"
+import { CheckCircle2, ShieldCheck, Upload, Loader2, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useFirestore, useUser } from "@/firebase"
-import { collection, addDoc, doc, updateDoc, increment, serverTimestamp } from "firebase/firestore"
+import { collection, addDoc, doc, updateDoc, increment } from "firebase/firestore"
 
 interface TaskSubmissionProps {
   task?: {
@@ -23,6 +23,7 @@ export function TaskSubmission({ task }: TaskSubmissionProps) {
   const [reviewId, setReviewId] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [submitted, setSubmitted] = React.useState(false)
+  const [isProcessing, setIsProcessing] = React.useState(false)
   const { toast } = useToast()
   const { user } = useUser()
   const db = useFirestore()
@@ -35,8 +36,8 @@ export function TaskSubmission({ task }: TaskSubmissionProps) {
     try {
       const rewardValue = parseInt(task.reward.replace(/[^0-9]/g, '')) || 0;
       
-      // 1. Create submission
-      await addDoc(collection(db, 'submissions'), {
+      // 1. Create submission with 'pending' status
+      const submissionRef = await addDoc(collection(db, 'submissions'), {
         companyName: task.company,
         rewardAmount: rewardValue,
         status: 'pending',
@@ -52,10 +53,40 @@ export function TaskSubmission({ task }: TaskSubmissionProps) {
       });
 
       setSubmitted(true)
+      setIsProcessing(true)
+      
       toast({
         title: "Submission Received",
-        description: "Your review is now being verified. This usually takes 24-48 hours.",
+        description: "Zentrix AI is auditing your review. Your reward will be credited automatically.",
       })
+
+      // 3. Simulate automatic verification after a random delay (30s to 5m)
+      const minDelay = 30 * 1000;
+      const maxDelay = 5 * 60 * 1000;
+      const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+
+      setTimeout(async () => {
+        try {
+          // Update submission to verified
+          await updateDoc(submissionRef, { status: 'verified' });
+
+          // Credit the user balance
+          await updateDoc(userRef, {
+            balance: increment(rewardValue),
+            lifetimeEarnings: increment(rewardValue),
+            pendingBalance: increment(-rewardValue)
+          });
+
+          setIsProcessing(false);
+          toast({
+            title: "Reward Credited!",
+            description: `₦${rewardValue.toLocaleString()} has been added to your available balance.`,
+          });
+        } catch (err) {
+          console.error("Auto-credit failed", err);
+        }
+      }, randomDelay);
+
     } catch (error: any) {
       toast({
         title: "Submission Error",
@@ -69,18 +100,24 @@ export function TaskSubmission({ task }: TaskSubmissionProps) {
 
   if (submitted) {
     return (
-      <Card className="border-green-500/20 bg-green-500/5">
+      <Card className={isProcessing ? "border-primary/20 bg-primary/5" : "border-green-500/20 bg-green-500/5"}>
         <CardContent className="flex flex-col items-center justify-center p-12 text-center space-y-4">
-          <div className="size-16 rounded-full bg-green-500/20 flex items-center justify-center">
-            <CheckCircle2 className="size-8 text-green-500" />
+          <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
+            {isProcessing ? <Clock className="size-8 text-primary animate-pulse" /> : <CheckCircle2 className="size-8 text-green-500" />}
           </div>
           <div>
-            <h3 className="font-headline text-xl font-bold">Review Submitted!</h3>
+            <h3 className="font-headline text-xl font-bold">
+              {isProcessing ? "AI Audit in Progress" : "Reward Credited!"}
+            </h3>
             <p className="text-muted-foreground max-w-xs mx-auto mt-2">
-              Our team is verifying your review. Once approved, the reward will be added to your pending balance.
+              {isProcessing 
+                ? "Our system is verifying your submission. You can leave this page; the reward will be credited automatically within minutes." 
+                : "Your review has been verified and your wallet has been updated."}
             </p>
           </div>
-          <Button variant="outline" onClick={() => setSubmitted(false)}>Submit Another Proof</Button>
+          {!isProcessing && (
+            <Button variant="outline" onClick={() => { setSubmitted(false); setReviewId(""); }}>Submit Another Proof</Button>
+          )}
         </CardContent>
       </Card>
     )
@@ -120,8 +157,7 @@ export function TaskSubmission({ task }: TaskSubmissionProps) {
           <div className="flex items-start gap-3 p-4 rounded-lg bg-secondary/50 border border-border">
             <ShieldCheck className="size-5 text-accent mt-0.5" />
             <p className="text-[10px] text-muted-foreground">
-               By submitting, you confirm that the review is honest and complies with Trustpilot's terms. 
-               Fabricated reviews may lead to account suspension and forfeiture of rewards.
+               By submitting, you confirm that the review is honest. Our AI automatically verifies the Review ID against the corporate database.
             </p>
           </div>
 

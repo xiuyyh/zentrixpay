@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { BalanceDisplay } from "@/components/wallet/balance-display"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { CreditCard, Download, History, PiggyBank, Smartphone, TrendingUp, Plus, ArrowUpRight, Loader2, ArrowDownLeft } from "lucide-react"
+import { CreditCard, Download, History, PiggyBank, Smartphone, TrendingUp, Plus, ArrowUpRight, Loader2, ArrowDownLeft, Zap } from "lucide-react"
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase"
 import { doc, collection, query, where, orderBy, limit } from "firebase/firestore"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
@@ -48,16 +48,29 @@ export default function WalletPage() {
     );
   }, [db, user]);
 
+  const submissionsQuery = React.useMemo(() => {
+    if (!db || !user) return null;
+    return query(
+      collection(db, 'submissions'),
+      where('userId', '==', user.uid),
+      where('status', '==', 'verified'),
+      orderBy('submittedAt', 'desc'),
+      limit(20)
+    );
+  }, [db, user]);
+
   const { data: deposits, loading: depositsLoading } = useCollection(transactionsQuery);
   const { data: withdrawals, loading: withdrawalsLoading } = useCollection(withdrawalsQuery);
+  const { data: earnings, loading: earningsLoading } = useCollection(submissionsQuery);
 
   const combinedTransactions = React.useMemo(() => {
     const all = [
-      ...(deposits || []).map(d => ({ ...d, type: 'DEPOSIT' })),
-      ...(withdrawals || []).map(w => ({ ...w, type: 'WITHDRAWAL' }))
+      ...(deposits || []).map(d => ({ ...d, type: 'DEPOSIT', amount: d.amount, date: d.submittedAt })),
+      ...(withdrawals || []).map(w => ({ ...w, type: 'WITHDRAWAL', amount: w.amount, date: w.submittedAt })),
+      ...(earnings || []).map(e => ({ ...e, type: 'EARNING', amount: e.rewardAmount, date: e.submittedAt, name: e.companyName }))
     ];
-    return all.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()).slice(0, 20);
-  }, [deposits, withdrawals]);
+    return all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 20);
+  }, [deposits, withdrawals, earnings]);
 
   function handleDepositInit() {
     const amt = Number(depositAmount);
@@ -73,7 +86,7 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto w-full">
+    <div className="space-y-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-headline font-bold text-foreground">Reward Wallet</h2>
@@ -160,7 +173,7 @@ export default function WalletPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <History className="size-5 text-muted-foreground" />
-            <CardTitle className="font-headline text-xl">Transaction History</CardTitle>
+            <CardTitle className="font-headline text-xl">Combined History</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
@@ -174,27 +187,30 @@ export default function WalletPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {depositsLoading || withdrawalsLoading ? (
+              {depositsLoading || withdrawalsLoading || earningsLoading ? (
                  <TableRow><TableCell colSpan={4} className="text-center py-8"><Loader2 className="animate-spin mx-auto text-primary" /></TableCell></TableRow>
               ) : combinedTransactions.length === 0 ? (
                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">No recent activity.</TableCell></TableRow>
               ) : (
                 combinedTransactions.map((tx: any) => (
                   <TableRow key={tx.id} className="border-border hover:bg-secondary/20">
-                    <TableCell className="text-muted-foreground text-xs">{new Date(tx.submittedAt).toLocaleDateString()} {new Date(tx.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{new Date(tx.date).toLocaleDateString()} {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`text-[10px] uppercase font-bold tracking-widest ${tx.type === 'DEPOSIT' ? 'bg-green-500/5 text-green-500' : 'bg-red-500/5 text-red-500'}`}>
-                         {tx.type}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {tx.type === 'EARNING' ? <Zap className="size-3 text-yellow-500" /> : <CreditCard className="size-3 text-muted-foreground" />}
+                        <Badge variant="outline" className={`text-[10px] uppercase font-bold tracking-widest ${tx.type === 'DEPOSIT' || tx.type === 'EARNING' ? 'bg-green-500/5 text-green-500' : 'bg-red-500/5 text-red-500'}`}>
+                          {tx.type} {tx.name ? `(${tx.name})` : ''}
+                        </Badge>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className={`size-1.5 rounded-full ${tx.status === 'approved' ? 'bg-green-500' : tx.status === 'rejected' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`} />
+                        <div className={`size-1.5 rounded-full ${tx.status === 'approved' || tx.status === 'verified' ? 'bg-green-500' : tx.status === 'rejected' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`} />
                         <span className="text-xs font-medium capitalize">{tx.status}</span>
                       </div>
                     </TableCell>
-                    <TableCell className={`text-right font-bold font-headline ${tx.type === 'DEPOSIT' ? 'text-green-500' : 'text-red-500'}`}>
-                      {tx.type === 'DEPOSIT' ? '+' : '-'}₦{tx.amount.toLocaleString()}
+                    <TableCell className={`text-right font-bold font-headline ${tx.type === 'DEPOSIT' || tx.type === 'EARNING' ? 'text-green-500' : 'text-red-500'}`}>
+                      {tx.type === 'DEPOSIT' || tx.type === 'EARNING' ? '+' : '-'}₦{tx.amount.toLocaleString()}
                     </TableCell>
                   </TableRow>
                 ))

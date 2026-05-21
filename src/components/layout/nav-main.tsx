@@ -54,14 +54,9 @@ const navItems = [
 
 const accountItems = [
   {
-    title: "History",
+    title: "Earning History",
     url: "/history",
     icon: History,
-  },
-  {
-    title: "Verification",
-    url: "/verification",
-    icon: ShieldCheck,
   },
 ]
 

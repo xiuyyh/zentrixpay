@@ -4,7 +4,7 @@ import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Star, ArrowRight, Loader2, LayoutGrid } from "lucide-react"
+import { Star, ArrowRight, Loader2, LayoutGrid, Zap } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useFirestore, useCollection, useUser, useDoc } from "@/firebase"
@@ -30,6 +30,17 @@ export default function TasksPage() {
 
   const { data: tasks, loading } = useCollection(tasksQuery);
 
+  const PLAN_NAMES: Record<string, { name: string; description: string }> = {
+    "p15k": { name: "₦15,000 Starter", description: "Entry-level earning tier" },
+    "p35k": { name: "₦35,000 Basic", description: "Beginner advantage tier" },
+    "p70k": { name: "₦70,000 Bronze", description: "Intermediate tier access" },
+    "p100k": { name: "₦100,000 Silver", description: "Enhanced rewards tier" },
+    "p150k": { name: "₦150,000 Gold", description: "Premium earning status" },
+    "p200k": { name: "₦200,000 Platinum", description: "Elite member tier" },
+    "p300k": { name: "₦300,000 Diamond", description: "Highest tier access" },
+    "p500k": { name: "₦500,000 Executive", description: "VIP exclusive tier" },
+  };
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -41,6 +52,26 @@ export default function TasksPage() {
           <Badge variant="destructive" className="animate-pulse">Active Plan Required</Badge>
         )}
       </div>
+
+      {profile?.activePlanId && (
+        <Card className="border-accent/40 bg-accent/5">
+          <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-accent/20 text-accent">
+                <Zap className="size-6" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Your Current Tier</p>
+                <p className="text-xl font-headline font-bold text-foreground">{PLAN_NAMES[profile.activePlanId]?.name || profile.activePlanId}</p>
+                <p className="text-xs text-muted-foreground mt-1">{PLAN_NAMES[profile.activePlanId]?.description}</p>
+              </div>
+            </div>
+            <Link href="/plans">
+              <Button variant="outline" className="border-accent/40 hover:bg-accent/10 font-semibold">Upgrade Tier</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">

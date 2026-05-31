@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { BalanceDisplay } from "@/components/wallet/balance-display"
 import { Button } from "@/components/ui/button"
-import { ArrowUpRight, CheckCircle2, Clock, Zap, Wallet as WalletIcon, TrendingUp, AlertTriangle } from "lucide-react"
+import { ArrowUpRight, Clock, Zap, Wallet as WalletIcon, TrendingUp, AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useUser, useFirestore, useDoc } from "@/firebase"
@@ -34,7 +34,6 @@ export default function DashboardPage() {
   const { data: profile } = useDoc(userProfileRef);
 
   const stats = [
-    { label: "Tasks Completed", value: "12", icon: CheckCircle2, color: "text-red-500" },
     { label: "Active Plan", value: profile?.activePlanId ? PLAN_NAMES[profile.activePlanId] : "No Active Plan", icon: Zap, color: "text-accent" },
     { label: "Referrals", value: profile?.referralCount || "0", icon: TrendingUp, color: "text-green-500" },
   ]

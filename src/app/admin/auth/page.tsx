@@ -104,6 +104,7 @@ export default function AdminAuthPage() {
                     className="pl-10 h-11 bg-background"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                 />
                 </div>
             </div>

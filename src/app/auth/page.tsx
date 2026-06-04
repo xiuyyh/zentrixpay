@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,7 +10,7 @@ import {
   setPersistence, 
   browserLocalPersistence 
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -70,11 +71,24 @@ export default function AuthPage() {
           lifetimeEarnings: 1500,
           payoutMethod: 'Bank Transfer',
           referralCount: 0,
+          totalReferrals: 0,
           referredBy: referralCode || null,
           role: 'user',
           activePlanId: null,
-          hasActivatedFirstPlan: false // Flag to track when they become an "active referral"
+          hasActivatedFirstPlan: false
         });
+
+        // Increment the referrer's total referral count
+        if (referralCode) {
+          try {
+            const referrerRef = doc(db, 'users', referralCode);
+            await updateDoc(referrerRef, {
+              totalReferrals: increment(1)
+            });
+          } catch (e) {
+            console.error("Failed to update totalReferrals for referrer", e);
+          }
+        }
 
         toast({
           title: "Welcome to Zentrix Pay",

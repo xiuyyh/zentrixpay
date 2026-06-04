@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -6,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUser, useFirestore, useDoc } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { Copy, Users, Zap, Gift, Smartphone, TrendingUp, CheckCircle2, DollarSign } from "lucide-react";
+import { Copy, Users, Zap, Gift, Smartphone, TrendingUp, CheckCircle2, DollarSign, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ReferralsPage() {
-  const { user } = useUser();
+  const { user } = userUser();
   const db = useFirestore();
   const { toast } = useToast();
   
@@ -84,22 +85,31 @@ export default function ReferralsPage() {
                   </Button>
                </div>
                
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-                  <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex items-center gap-4">
-                     <div className="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                        <Users className="size-6" />
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                  <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex flex-col gap-2">
+                     <div className="size-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                        <Users className="size-5" />
                      </div>
                      <div>
-                        <p className="text-xs text-muted-foreground font-bold uppercase">Active Referrals</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Total Registered</p>
+                        <p className="text-2xl font-headline font-bold">{profile?.totalReferrals || 0}</p>
+                     </div>
+                  </div>
+                  <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex flex-col gap-2">
+                     <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <UserCheck className="size-5" />
+                     </div>
+                     <div>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Active (Paid)</p>
                         <p className="text-2xl font-headline font-bold">{profile?.referralCount || 0}</p>
                      </div>
                   </div>
-                  <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex items-center gap-4">
-                     <div className="size-12 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center">
-                        <TrendingUp className="size-6" />
+                  <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex flex-col gap-2">
+                     <div className="size-10 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center">
+                        <TrendingUp className="size-5" />
                      </div>
                      <div>
-                        <p className="text-xs text-muted-foreground font-bold uppercase">Commission Total</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Commission</p>
                         <p className="text-2xl font-headline font-bold text-green-500">₦{(profile?.lifetimeEarnings || 0).toLocaleString()}</p>
                      </div>
                   </div>

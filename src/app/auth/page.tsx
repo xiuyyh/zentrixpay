@@ -9,7 +9,7 @@ import {
   setPersistence, 
   browserLocalPersistence 
 } from 'firebase/auth';
-import { doc, setDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -59,7 +59,8 @@ export default function AuthPage() {
         await updateProfile(result.user, { displayName });
         
         const userRef = doc(db, 'users', result.user.uid);
-        // New users get 1500 bonus
+        
+        // Initial setup for new users (starting balance 1500 as bonus)
         await setDoc(userRef, {
           uid: result.user.uid,
           email: result.user.email,
@@ -71,15 +72,9 @@ export default function AuthPage() {
           referralCount: 0,
           referredBy: referralCode || null,
           role: 'user',
-          activePlanId: null
+          activePlanId: null,
+          hasActivatedFirstPlan: false // Flag to track when they become an "active referral"
         });
-
-        if (referralCode) {
-          const referrerRef = doc(db, 'users', referralCode);
-          updateDoc(referrerRef, {
-            referralCount: increment(1)
-          }).catch(err => console.error("Referrer update failed", err));
-        }
 
         toast({
           title: "Welcome to Zentrix Pay",
@@ -93,12 +88,16 @@ export default function AuthPage() {
     } catch (error: any) {
       console.error("Auth Error:", error);
       let message = error.message;
-      if (error.code === 'auth/user-not-found') message = "No account found with this email.";
-      if (error.code === 'auth/wrong-password') message = "Incorrect password.";
-      if (error.code === 'auth/email-already-in-use') message = "An account already exists with this email.";
-      if (error.code === 'auth/invalid-email') message = "Invalid email format.";
-      if (error.code === 'auth/weak-password') message = "Password should be at least 6 characters.";
-      if (error.code === 'auth/operation-not-allowed') message = "Email/Password sign-in is disabled in your Firebase project. Please enable it in Authentication > Sign-in method in the Firebase Console.";
+
+      if (error.code === 'auth/operation-not-allowed') {
+        message = "Email/Password sign-in is not enabled. Please enable it in the Firebase Console under Authentication > Sign-in method.";
+      } else if (error.code === 'auth/user-not-found') {
+        message = "No account found with this email.";
+      } else if (error.code === 'auth/wrong-password') {
+        message = "Incorrect password.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        message = "An account already exists with this email.";
+      }
 
       setAuthError(message);
       toast({

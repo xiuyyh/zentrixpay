@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -46,25 +45,37 @@ export default function PlansPage() {
     setLoadingId(plan.id);
     try {
       // 1. Deduct balance and set plan
-      await updateDoc(doc(db, 'users', user.uid), {
+      const userUpdate: any = {
         balance: increment(-plan.price),
         activePlanId: plan.id,
-      });
+      };
+
+      // Set 'hasActivatedFirstPlan' to true if it's their first time
+      if (!profile.hasActivatedFirstPlan) {
+        userUpdate.hasActivatedFirstPlan = true;
+      }
+
+      await updateDoc(doc(db, 'users', user.uid), userUpdate);
 
       // 2. Handle Referral Commission (5%)
       if (profile.referredBy) {
         const commission = plan.price * 0.05;
         const referrerRef = doc(db, 'users', profile.referredBy);
-        const referrerSnap = await getDoc(referrerRef);
         
-        if (referrerSnap.exists()) {
-          await updateDoc(referrerRef, {
-            balance: increment(commission),
-            lifetimeEarnings: increment(commission)
-          });
-          
-          console.log(`Awarded ₦${commission} commission to referrer ${profile.referredBy}`);
+        // Referrer updates
+        const referrerUpdate: any = {
+          balance: increment(commission),
+          lifetimeEarnings: increment(commission)
+        };
+
+        // If this is the referred user's first plan activation, increment referrer's active referral count
+        if (!profile.hasActivatedFirstPlan) {
+          referrerUpdate.referralCount = increment(1);
         }
+
+        await updateDoc(referrerRef, referrerUpdate);
+        
+        console.log(`Awarded ₦${commission} commission to referrer ${profile.referredBy}`);
       }
 
       toast({
@@ -146,10 +157,18 @@ export default function PlansPage() {
               <Zap className="size-5" />
               Referral Bonuses
             </h4>
-            <p className="text-sm text-muted-foreground">Invite friends and earn instantly when they activate a plan.</p>
+            <p className="text-sm text-muted-foreground">Invite friends and earn instantly when they activate any investment plan.</p>
             <div className="bg-background rounded-xl p-4 border border-primary/10">
                 <p className="text-2xl font-bold text-primary">5% Instant Bonus</p>
-                <p className="text-xs text-muted-foreground mt-1">On every direct referral activation.</p>
+                <p className="text-xs text-muted-foreground mt-1">Earn 5% of your referral's registration amount immediately.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+              <div>₦15k Plan → ₦750</div>
+              <div>₦100k Plan → ₦5,000</div>
+              <div>₦35k Plan → ₦1,750</div>
+              <div>₦200k Plan → ₦10,000</div>
+              <div>₦70k Plan → ₦3,500</div>
+              <div>₦500k Plan → ₦25,000</div>
             </div>
           </CardContent>
         </Card>
@@ -160,17 +179,18 @@ export default function PlansPage() {
               <AlertCircle className="size-5" />
               Weekly Salary
             </h4>
-            <p className="text-sm text-muted-foreground">Top performers qualify for consistent weekly payouts.</p>
-            <div className="grid grid-cols-2 gap-4">
+            <p className="text-sm text-muted-foreground">Active marketers who build teams qualify for consistent weekly rewards.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                <div className="p-3 bg-background rounded-lg border border-accent/10">
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">20 Referrals</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">20 Active Invites</p>
                   <p className="text-lg font-bold text-accent">₦10,000 / week</p>
                </div>
                <div className="p-3 bg-background rounded-lg border border-accent/10">
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">40 Referrals</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">40 Active Invites</p>
                   <p className="text-lg font-bold text-accent">₦30,000 / week</p>
                </div>
             </div>
+            <p className="text-[9px] text-muted-foreground italic text-center">Referrals are counted as 'Active' once they purchase their first plan.</p>
           </CardContent>
         </Card>
       </div>

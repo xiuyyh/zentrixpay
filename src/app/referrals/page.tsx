@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -11,7 +10,7 @@ import { Copy, Users, Zap, Gift, Smartphone, TrendingUp, CheckCircle2, DollarSig
 import { useToast } from "@/hooks/use-toast";
 
 export default function ReferralsPage() {
-  const { user } = userUser();
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   

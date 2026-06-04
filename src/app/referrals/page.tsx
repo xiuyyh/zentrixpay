@@ -63,7 +63,6 @@ export default function ReferralsPage() {
       });
       
       // 2. Clear the available reward on the referred user's doc
-      // This works now because we updated the security rules to allow referrers to clear rewards
       const refUserRef = doc(db, 'users', refUser.id);
       await updateDoc(refUserRef, {
         availableReferralReward: 0
@@ -128,16 +127,7 @@ export default function ReferralsPage() {
                   </Button>
                </div>
                
-               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-                  <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex flex-col gap-2">
-                     <div className="size-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                        <Users className="size-5" />
-                     </div>
-                     <div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Total Registered</p>
-                        <p className="text-2xl font-headline font-bold">{profile?.totalReferrals || 0}</p>
-                     </div>
-                  </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                   <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex flex-col gap-2">
                      <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                         <UserCheck className="size-5" />

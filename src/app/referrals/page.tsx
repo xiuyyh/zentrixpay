@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -33,6 +32,10 @@ export default function ReferralsPage() {
 
   const { data: referredUsers, loading: referralsLoading } = useCollection(referralsQuery);
 
+  const activeReferralsCount = React.useMemo(() => {
+    return referredUsers?.filter((u: any) => u.activePlanId).length || 0;
+  }, [referredUsers]);
+
   const referralLink = typeof window !== 'undefined' 
     ? `${window.location.origin}/auth?ref=${user?.uid}` 
     : '';
@@ -60,6 +63,7 @@ export default function ReferralsPage() {
       });
       
       // 2. Clear the available reward on the referred user's doc
+      // This works now because we updated the security rules to allow referrers to clear rewards
       const refUserRef = doc(db, 'users', refUser.id);
       await updateDoc(refUserRef, {
         availableReferralReward: 0
@@ -81,8 +85,8 @@ export default function ReferralsPage() {
   }
 
   const salaryTiers = [
-    { count: 20, salary: "₦10,000", status: (profile?.referralCount || 0) >= 20 },
-    { count: 40, salary: "₦30,000", status: (profile?.referralCount || 0) >= 40 },
+    { count: 20, salary: "₦10,000", status: activeReferralsCount >= 20 },
+    { count: 40, salary: "₦30,000", status: activeReferralsCount >= 40 },
   ];
 
   return (
@@ -140,7 +144,7 @@ export default function ReferralsPage() {
                      </div>
                      <div>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Active (Paid)</p>
-                        <p className="text-2xl font-headline font-bold">{profile?.referralCount || 0}</p>
+                        <p className="text-2xl font-headline font-bold">{activeReferralsCount}</p>
                      </div>
                   </div>
                   <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex flex-col gap-2">

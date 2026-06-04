@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -60,15 +59,8 @@ export default function PlansPage() {
       if (profile.referredBy) {
         const commission = plan.price * 0.05;
         // We store the claimable reward on the referred user's document
+        // The referrer will be able to claim it from their Referrals page
         userUpdate.availableReferralReward = increment(commission);
-
-        // If this is the referred user's first plan activation, increment referrer's active referral count
-        if (!profile.hasActivatedFirstPlan) {
-          const referrerRef = doc(db, 'users', profile.referredBy);
-          await updateDoc(referrerRef, {
-            referralCount: increment(1)
-          });
-        }
       }
 
       await updateDoc(doc(db, 'users', user.uid), userUpdate);

@@ -22,7 +22,8 @@ service cloud.firestore {
 
       allow update: if request.auth != null && (
         (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
-        isAdmin(request.auth.uid)
+        isAdmin(request.auth.uid) ||
+        (resource.data.referredBy == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableReferralReward']))
       );
 
       allow delete: if request.auth != null && isAdmin(request.auth.uid);

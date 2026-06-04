@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useDoc } from "@/firebase";
-import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
+import { doc, updateDoc, increment } from "firebase/firestore";
 import { Check, Zap, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -55,28 +56,22 @@ export default function PlansPage() {
         userUpdate.hasActivatedFirstPlan = true;
       }
 
-      await updateDoc(doc(db, 'users', user.uid), userUpdate);
-
-      // 2. Handle Referral Commission (5%)
+      // 2. Mark Referral Commission as Available for Manual Claim (5%)
       if (profile.referredBy) {
         const commission = plan.price * 0.05;
-        const referrerRef = doc(db, 'users', profile.referredBy);
-        
-        // Referrer updates
-        const referrerUpdate: any = {
-          balance: increment(commission),
-          lifetimeEarnings: increment(commission)
-        };
+        // We store the claimable reward on the referred user's document
+        userUpdate.availableReferralReward = increment(commission);
 
         // If this is the referred user's first plan activation, increment referrer's active referral count
         if (!profile.hasActivatedFirstPlan) {
-          referrerUpdate.referralCount = increment(1);
+          const referrerRef = doc(db, 'users', profile.referredBy);
+          await updateDoc(referrerRef, {
+            referralCount: increment(1)
+          });
         }
-
-        await updateDoc(referrerRef, referrerUpdate);
-        
-        console.log(`Awarded ₦${commission} commission to referrer ${profile.referredBy}`);
       }
+
+      await updateDoc(doc(db, 'users', user.uid), userUpdate);
 
       toast({
         title: "Plan Activated!",

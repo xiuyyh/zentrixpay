@@ -19,7 +19,8 @@
         "referralCount": { "type": "number", "description": "Number of active (paid) referrals." },
         "totalReferrals": { "type": "number", "description": "Total number of users who signed up via this link." },
         "referredBy": { "type": "string", "description": "The UID of the user who referred this user." },
-        "hasActivatedFirstPlan": { "type": "boolean", "description": "Whether the user has ever activated an investment plan." }
+        "hasActivatedFirstPlan": { "type": "boolean", "description": "Whether the user has ever activated an investment plan." },
+        "availableReferralReward": { "type": "number", "description": "The amount of referral commission available for the referrer to claim." }
       },
       "required": ["uid", "email"]
     },

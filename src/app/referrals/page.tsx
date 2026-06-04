@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,14 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
-import { doc, collection, query, where, limit } from "firebase/firestore";
-import { Copy, Users, Zap, Gift, Smartphone, TrendingUp, CheckCircle2, DollarSign, UserCheck, Loader2 } from "lucide-react";
+import { doc, collection, query, where, limit, updateDoc, increment } from "firebase/firestore";
+import { Copy, Users, Zap, Gift, Smartphone, TrendingUp, CheckCircle2, UserCheck, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ReferralsPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const [claimingId, setClaimingId] = React.useState<string | null>(null);
   
   const profileRef = React.useMemo(() => user ? doc(db, 'users', user.uid) : null, [user, db]);
   const { data: profile } = useDoc(profileRef);
@@ -43,20 +45,44 @@ export default function ReferralsPage() {
     });
   }
 
+  async function handleClaimReward(refUser: any) {
+    if (!db || !user || !refUser.availableReferralReward || refUser.availableReferralReward <= 0) return;
+    
+    setClaimingId(refUser.id);
+    try {
+      const rewardAmount = refUser.availableReferralReward;
+      
+      // 1. Credit the referrer's balance
+      const referrerRef = doc(db, 'users', user.uid);
+      await updateDoc(referrerRef, {
+        balance: increment(rewardAmount),
+        lifetimeEarnings: increment(rewardAmount)
+      });
+      
+      // 2. Clear the available reward on the referred user's doc
+      const refUserRef = doc(db, 'users', refUser.id);
+      await updateDoc(refUserRef, {
+        availableReferralReward: 0
+      });
+      
+      toast({
+        title: "Reward Claimed!",
+        description: `₦${rewardAmount.toLocaleString()} has been added to your balance.`,
+      });
+    } catch (e: any) {
+      toast({
+        title: "Claim Failed",
+        description: e.message,
+        variant: "destructive"
+      });
+    } finally {
+      setClaimingId(null);
+    }
+  }
+
   const salaryTiers = [
     { count: 20, salary: "₦10,000", status: (profile?.referralCount || 0) >= 20 },
     { count: 40, salary: "₦30,000", status: (profile?.referralCount || 0) >= 40 },
-  ];
-
-  const bonusBreakdown = [
-    { plan: "₦15,000", bonus: "₦750" },
-    { plan: "₦35,000", bonus: "₦1,750" },
-    { plan: "₦70,000", bonus: "₦3,500" },
-    { plan: "₦100,000", bonus: "₦5,000" },
-    { plan: "₦150,000", bonus: "₦7,500" },
-    { plan: "₦200,000", bonus: "₦10,000" },
-    { plan: "₦300,000", bonus: "₦15,000" },
-    { plan: "₦500,000", bonus: "₦25,000" },
   ];
 
   return (
@@ -123,7 +149,7 @@ export default function ReferralsPage() {
                      </div>
                      <div>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Commission</p>
-                        <p className="text-2xl font-headline font-bold text-green-500">₦{(profile?.lifetimeEarnings || 0).toLocaleString()}</p>
+                        <p className="text-2xl font-headline font-bold text-green-500">₦{(profile?.lifetimeEarnings || 1500 - 1500).toLocaleString()}</p>
                      </div>
                   </div>
                </div>
@@ -141,19 +167,20 @@ export default function ReferralsPage() {
                   <TableRow className="border-border">
                     <TableHead>Member Name</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Activation</TableHead>
+                    <TableHead>Activation</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {referralsLoading ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="h-24 text-center">
+                      <TableCell colSpan={4} className="h-24 text-center">
                         <Loader2 className="size-5 animate-spin mx-auto text-primary" />
                       </TableCell>
                     </TableRow>
                   ) : !referredUsers || referredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="h-24 text-center text-muted-foreground text-xs">
+                      <TableCell colSpan={4} className="h-24 text-center text-muted-foreground text-xs">
                         No referrals recorded yet.
                       </TableCell>
                     </TableRow>
@@ -173,8 +200,24 @@ export default function ReferralsPage() {
                             <Badge variant="outline" className="text-[10px] text-muted-foreground">Pending</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-[10px]">
+                        <TableCell className="font-mono text-[10px]">
                           {refUser.activePlanId ? refUser.activePlanId.toUpperCase() : '---'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                           {refUser.availableReferralReward > 0 ? (
+                              <Button 
+                                size="sm" 
+                                className="h-7 text-[10px] bg-green-600 hover:bg-green-700 text-white font-bold"
+                                onClick={() => handleClaimReward(refUser)}
+                                disabled={claimingId === refUser.id}
+                              >
+                                {claimingId === refUser.id ? <Loader2 className="size-3 animate-spin" /> : `Claim ₦${refUser.availableReferralReward.toLocaleString()}`}
+                              </Button>
+                           ) : refUser.activePlanId ? (
+                              <Badge variant="outline" className="text-[10px] text-green-500 border-green-500/20">Reward Claimed</Badge>
+                           ) : (
+                              <span className="text-[10px] text-muted-foreground italic">No reward</span>
+                           )}
                         </TableCell>
                       </TableRow>
                     ))

@@ -12,7 +12,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if request.auth != null && (
         request.auth.uid == userId ||
-        isAdmin(request.auth.uid)
+        isAdmin(request.auth.uid) ||
+        resource.data.referredBy == request.auth.uid
       );
 
       allow create: if request.auth != null &&

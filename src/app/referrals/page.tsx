@@ -4,9 +4,11 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useUser, useFirestore, useDoc } from "@/firebase";
-import { doc } from "firebase/firestore";
-import { Copy, Users, Zap, Gift, Smartphone, TrendingUp, CheckCircle2, DollarSign, UserCheck } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
+import { doc, collection, query, where, limit } from "firebase/firestore";
+import { Copy, Users, Zap, Gift, Smartphone, TrendingUp, CheckCircle2, DollarSign, UserCheck, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ReferralsPage() {
@@ -16,6 +18,18 @@ export default function ReferralsPage() {
   
   const profileRef = React.useMemo(() => user ? doc(db, 'users', user.uid) : null, [user, db]);
   const { data: profile } = useDoc(profileRef);
+
+  // Query to find users referred by the current user
+  const referralsQuery = React.useMemo(() => {
+    if (!db || !user) return null;
+    return query(
+      collection(db, 'users'),
+      where('referredBy', '==', user.uid),
+      limit(50)
+    );
+  }, [db, user]);
+
+  const { data: referredUsers, loading: referralsLoading } = useCollection(referralsQuery);
 
   const referralLink = typeof window !== 'undefined' 
     ? `${window.location.origin}/auth?ref=${user?.uid}` 
@@ -116,22 +130,58 @@ export default function ReferralsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-secondary/5">
-             <CardHeader>
-                <CardTitle className="text-lg font-headline flex items-center gap-2">
-                   <DollarSign className="size-5 text-green-500" />
-                   Bonus Breakdown
-                </CardTitle>
-                <CardDescription>Earnings based on 5% of your referral's selected investment plan.</CardDescription>
-             </CardHeader>
-             <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {bonusBreakdown.map((item) => (
-                   <div key={item.plan} className="p-3 rounded-xl bg-background border border-border text-center space-y-1">
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase">{item.plan} Tier</p>
-                      <p className="text-sm font-bold text-green-500">{item.bonus}</p>
-                   </div>
-                ))}
-             </CardContent>
+          <Card className="border-border bg-card overflow-hidden">
+            <CardHeader className="bg-secondary/10 border-b">
+               <CardTitle className="text-lg font-headline">My Referrals</CardTitle>
+               <CardDescription>Live tracking of your network registrations.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead>Member Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Activation</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {referralsLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="h-24 text-center">
+                        <Loader2 className="size-5 animate-spin mx-auto text-primary" />
+                      </TableCell>
+                    </TableRow>
+                  ) : !referredUsers || referredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="h-24 text-center text-muted-foreground text-xs">
+                        No referrals recorded yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    referredUsers.map((refUser: any) => (
+                      <TableRow key={refUser.id} className="border-border">
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-xs">{refUser.displayName || 'Anonymous'}</span>
+                            <span className="text-[10px] text-muted-foreground">{refUser.email}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {refUser.activePlanId ? (
+                            <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px]">Active</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground">Pending</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-[10px]">
+                          {refUser.activePlanId ? refUser.activePlanId.toUpperCase() : '---'}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
           </Card>
         </div>
 
@@ -160,23 +210,6 @@ export default function ReferralsPage() {
              <p className="text-[10px] text-center text-muted-foreground italic">Referrals are counted when your link users activate any earning plan.</p>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="bg-secondary/20 p-8 rounded-3xl border border-border mt-12">
-         <h4 className="font-headline font-bold text-xl mb-6">Referral Workflow</h4>
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-               { step: 1, title: "Share Your Link", desc: "Invite friends via social media or WhatsApp using your unique link." },
-               { step: 2, title: "Wait for Activation", desc: "A referral is counted as 'Active' once they purchase an investment plan." },
-               { step: 3, title: "Collect Rewards", desc: "Receive 5% commission instantly and qualify for the Weekly Salary program." }
-            ].map(item => (
-               <div key={item.step} className="space-y-2 relative">
-                  <div className="size-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg mb-4">{item.step}</div>
-                  <h5 className="font-bold text-lg">{item.title}</h5>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-               </div>
-            ))}
-         </div>
       </div>
     </div>
   );

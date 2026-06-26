@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, limit, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, query, doc, updateDoc, increment } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +32,8 @@ export default function AdminDashboardPage() {
 
   const usersQuery = React.useMemo(() => {
     if (!firestore) return null;
-    return query(collection(firestore, 'users'), limit(100));
+    // Removed limit(100) to show all users
+    return query(collection(firestore, 'users'));
   }, [firestore]);
 
   const { data: users, loading } = useCollection(usersQuery);
@@ -47,11 +48,14 @@ export default function AdminDashboardPage() {
   const [newRole, setNewRole] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
 
-  const filteredUsers = users?.filter(u =>
-    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.uid?.includes(searchTerm)
-  );
+  const filteredUsers = React.useMemo(() => {
+    if (!users) return [];
+    return users.filter(u =>
+      u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.uid?.includes(searchTerm)
+    );
+  }, [users, searchTerm]);
 
   function openManage(user: any) {
     setSelectedUser(user);
@@ -164,9 +168,14 @@ export default function AdminDashboardPage() {
       <Card className="bg-zinc-900 border-white/5 overflow-hidden">
         <CardHeader className="bg-white/5 p-3 md:p-6">
           <div className="flex flex-col gap-3">
-            <div>
-              <CardTitle className="text-base md:text-lg">User Directory</CardTitle>
-              <CardDescription className="text-xs md:text-sm">Live database view of all registered members.</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-base md:text-lg">User Directory</CardTitle>
+                <CardDescription className="text-xs md:text-sm">Live database view of all registered members.</CardDescription>
+              </div>
+              <Badge variant="outline" className="text-[10px] border-white/10 text-zinc-500 uppercase">
+                {filteredUsers.length} Users Found
+              </Badge>
             </div>
             <div className="relative w-full">
               <Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
@@ -200,14 +209,14 @@ export default function AdminDashboardPage() {
                       <Loader2 className="size-6 animate-spin mx-auto text-red-500" />
                     </TableCell>
                   </TableRow>
-                ) : filteredUsers?.length === 0 ? (
+                ) : filteredUsers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                       No users found matching your search.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers?.map((user) => (
+                  filteredUsers.map((user) => (
                     <TableRow key={user.uid} className="border-white/5 hover:bg-white/5 transition-colors">
                       <TableCell>
                         <div className="flex flex-col">
@@ -259,12 +268,12 @@ export default function AdminDashboardPage() {
               <div className="h-32 flex items-center justify-center">
                 <Loader2 className="size-6 animate-spin text-red-500" />
               </div>
-            ) : filteredUsers?.length === 0 ? (
+            ) : filteredUsers.length === 0 ? (
               <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
                 No users found matching your search.
               </div>
             ) : (
-              filteredUsers?.map((user) => (
+              filteredUsers.map((user) => (
                 <div key={user.uid} className="bg-zinc-950 rounded-lg border border-white/5 p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">

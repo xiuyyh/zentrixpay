@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Users, Wallet, Loader2, UserCog, PlusCircle, MinusCircle, ShieldCheck } from 'lucide-react';
+import { Search, Users, Wallet, Loader2, UserCog, PlusCircle, MinusCircle, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const PLAN_NAMES: Record<string, string> = {
@@ -26,18 +26,20 @@ const PLAN_NAMES: Record<string, string> = {
   "p500k": "₦500,000 Executive",
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminDashboardPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
 
   const usersQuery = React.useMemo(() => {
     if (!firestore) return null;
-    // Removed limit(100) to show all users
     return query(collection(firestore, 'users'));
   }, [firestore]);
 
   const { data: users, loading } = useCollection(usersQuery);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   // Manage modal state
   const [selectedUser, setSelectedUser] = React.useState<any>(null);
@@ -48,6 +50,11 @@ export default function AdminDashboardPage() {
   const [newRole, setNewRole] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
 
+  // Reset page when search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const filteredUsers = React.useMemo(() => {
     if (!users) return [];
     return users.filter(u =>
@@ -56,6 +63,12 @@ export default function AdminDashboardPage() {
       u.uid?.includes(searchTerm)
     );
   }, [users, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
+  const currentBatch = React.useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredUsers.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredUsers, currentPage]);
 
   function openManage(user: any) {
     setSelectedUser(user);
@@ -74,7 +87,6 @@ export default function AdminDashboardPage() {
       const userRef = doc(firestore, 'users', selectedUser.uid);
       const updates: Record<string, any> = {};
 
-      // Balance adjustment
       if (adjustAmount && !isNaN(Number(adjustAmount)) && Number(adjustAmount) > 0) {
         const delta = adjustType === 'add' ? Number(adjustAmount) : -Number(adjustAmount);
         updates.balance = increment(delta);
@@ -83,13 +95,11 @@ export default function AdminDashboardPage() {
         }
       }
 
-      // Plan assignment
       const resolvedPlan = assignPlan === 'none' ? null : (assignPlan || null);
       if (resolvedPlan !== (selectedUser.activePlanId || null)) {
         updates.activePlanId = resolvedPlan;
       }
 
-      // Role change
       if (newRole && newRole !== selectedUser.role) {
         updates.role = newRole;
       }
@@ -120,9 +130,36 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 px-0">
-      <div>
-        <h2 className="text-2xl md:text-3xl font-headline font-bold text-white tracking-tight">System Users</h2>
-        <p className="text-muted-foreground mt-1 text-sm md:text-base">Manage platform accounts and financial balances.</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-headline font-bold text-white tracking-tight">System Users</h2>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">Manage platform accounts and financial balances.</p>
+        </div>
+        <div className="flex items-center gap-2">
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className="bg-zinc-900 border-white/5 text-white disabled:opacity-30" 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            >
+                <ChevronLeft className="size-4 mr-1" />
+                Prev
+            </Button>
+            <div className="text-xs font-mono text-zinc-500 bg-zinc-900 px-3 py-1.5 rounded-md border border-white/5">
+                Page {currentPage} of {totalPages}
+            </div>
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className="bg-zinc-900 border-white/5 text-white disabled:opacity-30" 
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            >
+                Next
+                <ChevronRight className="size-4 ml-1" />
+            </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
@@ -171,10 +208,10 @@ export default function AdminDashboardPage() {
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle className="text-base md:text-lg">User Directory</CardTitle>
-                <CardDescription className="text-xs md:text-sm">Live database view of all registered members.</CardDescription>
+                <CardDescription className="text-xs md:text-sm">Batch viewing users in groups of {ITEMS_PER_PAGE}.</CardDescription>
               </div>
               <Badge variant="outline" className="text-[10px] border-white/10 text-zinc-500 uppercase">
-                {filteredUsers.length} Users Found
+                {filteredUsers.length} Results
               </Badge>
             </div>
             <div className="relative w-full">
@@ -189,7 +226,6 @@ export default function AdminDashboardPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader className="bg-zinc-950">
@@ -209,14 +245,14 @@ export default function AdminDashboardPage() {
                       <Loader2 className="size-6 animate-spin mx-auto text-red-500" />
                     </TableCell>
                   </TableRow>
-                ) : filteredUsers.length === 0 ? (
+                ) : currentBatch.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                       No users found matching your search.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
+                  currentBatch.map((user) => (
                     <TableRow key={user.uid} className="border-white/5 hover:bg-white/5 transition-colors">
                       <TableCell>
                         <div className="flex flex-col">
@@ -262,18 +298,17 @@ export default function AdminDashboardPage() {
             </Table>
           </div>
 
-          {/* Mobile Card View */}
           <div className="md:hidden space-y-3 p-4">
             {loading ? (
               <div className="h-32 flex items-center justify-center">
                 <Loader2 className="size-6 animate-spin text-red-500" />
               </div>
-            ) : filteredUsers.length === 0 ? (
+            ) : currentBatch.length === 0 ? (
               <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
                 No users found matching your search.
               </div>
             ) : (
-              filteredUsers.map((user) => (
+              currentBatch.map((user) => (
                 <div key={user.uid} className="bg-zinc-950 rounded-lg border border-white/5 p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -315,9 +350,35 @@ export default function AdminDashboardPage() {
             )}
           </div>
         </CardContent>
+        {filteredUsers.length > ITEMS_PER_PAGE && (
+            <div className="p-4 border-t border-white/5 bg-zinc-950 flex items-center justify-between">
+                <p className="text-[10px] text-zinc-500 font-mono">
+                    Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)} of {filteredUsers.length} entries
+                </p>
+                <div className="flex items-center gap-2">
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="size-8 text-zinc-400 disabled:opacity-30" 
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    >
+                        <ChevronLeft className="size-4" />
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="size-8 text-zinc-400 disabled:opacity-30" 
+                        disabled={currentPage >= totalPages}
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    >
+                        <ChevronRight className="size-4" />
+                    </Button>
+                </div>
+            </div>
+        )}
       </Card>
 
-      {/* Manage User Dialog */}
       <Dialog open={isManageOpen} onOpenChange={setIsManageOpen}>
         <DialogContent className="sm:max-w-lg bg-zinc-900 border-white/10 text-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -331,7 +392,6 @@ export default function AdminDashboardPage() {
           </DialogHeader>
 
           <div className="space-y-4 md:space-y-6 py-2">
-            {/* Current Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-zinc-950 rounded-lg p-3 md:p-4 border border-white/5">
                 <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Current Balance</p>
@@ -343,7 +403,6 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Balance Adjustment */}
             <div className="space-y-3 border border-white/5 rounded-lg p-3 md:p-4 bg-zinc-950/50">
               <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Balance Adjustment</p>
               <div className="flex gap-2">
@@ -378,7 +437,6 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Plan Assignment */}
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-widest text-zinc-400">Assign Investment Plan</Label>
               <Select value={assignPlan} onValueChange={setAssignPlan}>
@@ -394,7 +452,6 @@ export default function AdminDashboardPage() {
               </Select>
             </div>
 
-            {/* Role Assignment */}
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-widest text-zinc-400">User Role</Label>
               <Select value={newRole} onValueChange={setNewRole}>

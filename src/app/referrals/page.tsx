@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
-import { doc, collection, query, where, limit, updateDoc, increment } from "firebase/firestore";
+import { doc, collection, query, where, updateDoc, increment } from "firebase/firestore";
 import { Copy, Users, Zap, Gift, Smartphone, TrendingUp, CheckCircle2, UserCheck, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,13 +21,12 @@ export default function ReferralsPage() {
   const profileRef = React.useMemo(() => user ? doc(db, 'users', user.uid) : null, [user, db]);
   const { data: profile } = useDoc(profileRef);
 
-  // Query to find users referred by the current user
+  // Query to find users referred by the current user - Removed the limit to show all
   const referralsQuery = React.useMemo(() => {
     if (!db || !user) return null;
     return query(
       collection(db, 'users'),
-      where('referredBy', '==', user.uid),
-      limit(50)
+      where('referredBy', '==', user.uid)
     );
   }, [db, user]);
 
@@ -127,23 +127,14 @@ export default function ReferralsPage() {
                   </Button>
                </div>
                
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+               <div className="grid grid-cols-1 pt-4">
                   <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex flex-col gap-2">
                      <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                         <UserCheck className="size-5" />
                      </div>
                      <div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Active (Paid)</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Active Referrals (Paid)</p>
                         <p className="text-2xl font-headline font-bold">{activeReferralsCount}</p>
-                     </div>
-                  </div>
-                  <div className="p-6 rounded-2xl bg-secondary/30 border border-border flex flex-col gap-2">
-                     <div className="size-10 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center">
-                        <TrendingUp className="size-5" />
-                     </div>
-                     <div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Commission</p>
-                        <p className="text-2xl font-headline font-bold text-green-500">₦{(profile?.lifetimeEarnings || 1500 - 1500).toLocaleString()}</p>
                      </div>
                   </div>
                </div>
